@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.config import get_settings
-from app.routes import auth, telegram_accounts, tasks, templates, off_days, activity_logs
+from app.routes import auth, telegram_accounts, tasks, templates, off_days, activity_logs, admin
 from app.services.user_service import user_service
 from app.services.telegram_account_service import telegram_account_service
 from app.services.telegram_client_manager import telegram_client_manager
@@ -61,6 +61,7 @@ app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["Tasks"])
 app.include_router(templates.router, prefix="/api/v1/templates", tags=["Templates"])
 app.include_router(off_days.router, prefix="/api/v1/off-days", tags=["Off Days"])
 app.include_router(activity_logs.router, prefix="/api/v1/activity-logs", tags=["Activity Logs"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
 
 @app.get("/health")
 async def health_check():

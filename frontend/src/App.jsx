@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminProtectedRoute from './components/AdminProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 
 import TelegramAccountsPage from './pages/TelegramAccountsPage';
@@ -13,6 +14,12 @@ import TemplatesPage from './pages/TemplatesPage';
 import ActivityLogsPage from './pages/ActivityLogsPage';
 import OffDaysPage from './pages/OffDaysPage';
 import SettingsPage from './pages/SettingsPage';
+
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminAccountsPage from './pages/admin/AdminAccountsPage';
+import AdminTasksPage from './pages/admin/AdminTasksPage';
+import AdminSystemPage from './pages/admin/AdminSystemPage';
 
 function App() {
   return (
@@ -32,6 +39,15 @@ function App() {
           <Route path="/activity" element={<ActivityLogsPage />} />
           <Route path="/off-days" element={<OffDaysPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+
+          {/* Admin routes */}
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route path="/admin/accounts" element={<AdminAccountsPage />} />
+            <Route path="/admin/tasks" element={<AdminTasksPage />} />
+            <Route path="/admin/system" element={<AdminSystemPage />} />
+          </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>
@@ -40,3 +56,4 @@ function App() {
 }
 
 export default App;
+
