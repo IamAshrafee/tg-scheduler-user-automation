@@ -69,6 +69,7 @@ const CreateTaskPage = () => {
     const [groups, setGroups] = useState([]);
     const [stickerSets, setStickerSets] = useState([]);
     const [stickers, setStickers] = useState([]);
+    const [selectedStickerSet, setSelectedStickerSet] = useState('');
     const [loadingGroups, setLoadingGroups] = useState(false);
     const [loadingStickers, setLoadingStickers] = useState(false);
 
@@ -165,6 +166,7 @@ const CreateTaskPage = () => {
     const loadStickers = async (setName) => {
         if (!form.telegram_account_id) return;
         setLoadingStickers(true);
+        setSelectedStickerSet(setName);
         try {
             const res = await api.get(`/telegram-accounts/${form.telegram_account_id}/sticker-sets/${setName}/stickers`);
             setStickers(res.data.stickers || res.data || []);
@@ -437,7 +439,7 @@ const CreateTaskPage = () => {
                                                 sticker_id: String(sticker.id),
                                                 sticker_access_hash: sticker.access_hash,
                                                 sticker_emoji: sticker.emoji || '',
-                                                sticker_set_id: sticker.set_name || '',
+                                                sticker_set_id: selectedStickerSet,
                                             })}
                                             className={`p-2 rounded-lg border h-16 flex items-center justify-center transition-all ${form.action_content.sticker_id === String(sticker.id)
                                                 ? 'border-primary bg-primary/10 ring-1 ring-primary/20'

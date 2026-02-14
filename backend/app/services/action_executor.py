@@ -99,13 +99,39 @@ async def _execute_action(client, entity, task: Task):
     content = task.action_content
 
     if action == "send_sticker":
-        from telethon.tl.types import InputDocument
-        sticker_doc = InputDocument(
-            id=int(content.sticker_id),
-            access_hash=int(content.sticker_access_hash or 0),
-            file_reference=b"",
-        )
-        await client.send_file(entity, sticker_doc)
+        sticker_id_str = content.sticker_id  # stored as string
+        sticker_set_name = content.sticker_set_id  # the set's short_name
+
+        # Try to get the real sticker document from the set (fresh file_reference)
+        sticker_doc = None
+        if sticker_set_name:
+            try:
+                from telethon.tl.functions.messages import GetStickerSetRequest
+                from telethon.tl.types import InputStickerSetShortName
+                result = await client(
+                    GetStickerSetRequest(
+                        stickerset=InputStickerSetShortName(short_name=sticker_set_name),
+                        hash=0,
+                    )
+                )
+                for doc in result.documents:
+                    if str(doc.id) == sticker_id_str:
+                        sticker_doc = doc
+                        break
+            except Exception:
+                pass
+
+        if sticker_doc:
+            await client.send_file(entity, sticker_doc)
+        else:
+            # Fallback: try with InputDocument
+            from telethon.tl.types import InputDocument
+            sticker_doc = InputDocument(
+                id=int(sticker_id_str),
+                access_hash=int(content.sticker_access_hash or 0),
+                file_reference=b"",
+            )
+            await client.send_file(entity, sticker_doc)
 
     elif action == "send_text":
         parse_mode = content.parse_mode  # "markdown", "html", or None

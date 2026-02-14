@@ -320,8 +320,8 @@ class TelegramClientManager:
                 pass
 
             stickers.append({
-                "id": doc.id,
-                "access_hash": doc.access_hash,
+                "id": str(doc.id),
+                "access_hash": str(doc.access_hash),
                 "emoji": emoji,
                 "file_reference": doc.file_reference.hex() if doc.file_reference else None,
                 "thumbnail": thumbnail,
