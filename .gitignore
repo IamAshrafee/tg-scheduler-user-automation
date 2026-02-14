@@ -1,0 +1,29 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/.pytest_cache/
+*.pyc
+app/__pycache__/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Encryption
+backend/sessions/
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+.DS_Store

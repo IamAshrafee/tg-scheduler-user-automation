@@ -391,8 +391,11 @@ Users can create, edit, enable/disable, and delete automated tasks. The schedule
       # For custom_days / specific_dates:
       "specific_dates": [str],         # ["2026-02-20", "2026-03-01"]
       
-      "randomize_minutes": int         # optional: ±N minutes random offset
+      "random_delay_minutes": int      # optional: randomly add 0-N minutes delay (Anti-Ban)
     },
+    
+    # Anti-Ban Settings
+    "simulate_typing": bool,           # true = show "typing..." status before sending
     
     # Skip days
     "skip_days": {
@@ -422,6 +425,7 @@ Users can create, edit, enable/disable, and delete automated tasks. The schedule
 | `PUT` | `/api/v1/tasks/:id` | Update task | `200`, `400`, `401`, `404` |
 | `DELETE` | `/api/v1/tasks/:id` | Delete task | `204`, `401`, `404` |
 | `PATCH` | `/api/v1/tasks/:id/toggle` | Enable/disable task | `200`, `401`, `404` |
+| `POST` | `/api/v1/tasks/:id/test` | **Dry Run / Test Now**: Execute task immediately (one-time) | `200`, `400`, `401` |
 | `GET` | `/api/v1/tasks/:id/history` | Get task execution history | `200`, `401`, `404` |
 
 - [ ] Validate task creation:
@@ -541,6 +545,9 @@ For tasks that send photos, videos, or documents:
   - If any check fails → log skip reason
 
 - [ ] **Action Executor** — a module that handles each action type:
+  - **Anti-Ban Logic**:
+    - If `simulate_typing` is true: calculate duration based on text length, send "typing..." action, wait, then send.
+    - If `random_delay_minutes` > 0: sleep for random(0, N*60) seconds before starting.
   - `send_sticker(client, chat, sticker)` — send sticker by ID
   - `send_text(client, chat, text, parse_mode)` — send text message
   - `send_photo(client, chat, file_path, caption)` — send photo
@@ -548,10 +555,12 @@ For tasks that send photos, videos, or documents:
   - `send_document(client, chat, file_path, caption)` — send document
   - `forward_message(client, chat, source_chat_id, message_id)` — forward
 
-- [ ] Implement retry logic:
+- [ ] Implement retry logic & **Smart Failure Alerts**:
   - On failure, retry up to 3 times with exponential backoff (5s, 15s, 45s)
   - Log each retry attempt
-  - After 3 failures, mark as "failed" and move on
+  - After 3 failures:
+    - Mark as "failed"
+    - **Send Notification**: Email user or Telegram DM warning: "Task X failed 3 times. Automation stopped."
   
 - [ ] Implement duplicate prevention:
   - Before executing, check if the same task was already executed for this time slot today
@@ -710,14 +719,16 @@ Users can fully use the platform: browse templates for quick start, create custo
     - If weekly: day-of-week checkboxes (Mon-Sun)
     - If monthly: day-of-month picker
     - If specific dates: date picker for multiple dates
-    - Optional: randomize ± N minutes
-  - **Step 6 — Skip Days** (optional):
+    - Optional: **Random Delay** (0-5 minutes) for anti-ban protection
+  - **Step 6 — Skip Days & Settings**:
     - Note: "Global off days are already applied"
     - Additional per-task skip: weekly days + specific dates
+    - **Simulate Typing**: Checkbox to mimic human behavior before sending
   - **Step 7 — Review & Save**:
     - Summary of all selections
     - Task name input
     - Optional description
+    - **"Test Task Now"** button (Dry Run) to verify before saving
     - Save button → creates task → redirects to task list
 - [ ] Create `EditTaskPage` — same wizard, pre-populated with existing task data
 
