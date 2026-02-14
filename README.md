@@ -13,6 +13,8 @@ A comprehensive automation platform for Telegram tasks.
 5. Copy `.env.example` to `.env` and fill with your credentials (MONGO_URI, TELEGRAM_API_ID, etc.).
 6. Run server: `python app/main.py`.
 
+python -m uvicorn app.main:app --reload 
+
 ### Frontend (React)
 
 1. Navigate to `frontend/`.
