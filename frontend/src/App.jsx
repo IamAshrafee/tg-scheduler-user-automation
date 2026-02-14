@@ -6,6 +6,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AppLayout from './components/layout/AppLayout';
 
 import TelegramAccountsPage from './pages/TelegramAccountsPage';
+import TasksPage from './pages/TasksPage';
+import CreateTaskPage from './pages/CreateTaskPage';
+import TaskDetailPage from './pages/TaskDetailPage';
+import TemplatesPage from './pages/TemplatesPage';
+import ActivityLogsPage from './pages/ActivityLogsPage';
+import OffDaysPage from './pages/OffDaysPage';
+import SettingsPage from './pages/SettingsPage';
 
 function App() {
   return (
@@ -17,10 +24,15 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/accounts" element={<TelegramAccountsPage />} />
-          {/* Add other protected routes here later */}
-          {/* <Route path="/accounts" element={<AccountsPage />} /> */}
+          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/tasks/create" element={<CreateTaskPage />} />
+          <Route path="/tasks/:id" element={<TaskDetailPage />} />
+          <Route path="/tasks/:id/edit" element={<CreateTaskPage />} />
+          <Route path="/templates" element={<TemplatesPage />} />
+          <Route path="/activity" element={<ActivityLogsPage />} />
+          <Route path="/off-days" element={<OffDaysPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
-        {/* Redirect root to dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>

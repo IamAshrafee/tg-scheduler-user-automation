@@ -10,7 +10,8 @@ import {
     LogOut,
     Command,
     Activity,
-    PlusCircle
+    PlusCircle,
+    CalendarOff,
 } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -24,6 +25,7 @@ const Sidebar = () => {
         { name: 'Tasks', href: '/tasks', icon: CalendarClock },
         { name: 'Templates', href: '/templates', icon: Files },
         { name: 'Activity Log', href: '/activity', icon: Activity },
+        { name: 'Off Days', href: '/off-days', icon: CalendarOff },
         { name: 'Settings', href: '/settings', icon: Settings },
     ];
 
