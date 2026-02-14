@@ -45,6 +45,16 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(telegram_accounts.router, prefix="/api/v1/telegram-accounts", tags=["Telegram Accounts"])
 app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["Tasks"])

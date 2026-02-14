@@ -598,27 +598,27 @@ Users can register, log in, see a comprehensive dashboard (total accounts, activ
 ### Tasks
 
 #### 5.1 — Auth Pages
-- [ ] Create `LoginPage` with email/password form:
+- [x] Create `LoginPage` with email/password form:
   - Zod schema for validation
   - react-hook-form for form management
   - Error display for invalid credentials
   - "Register" link
-- [ ] Create `RegisterPage` with email/password/confirm-password form:
+- [x] Create `RegisterPage` with email/password/confirm-password form:
   - Password strength indicator
   - Email format validation
   - Success → redirect to login
-- [ ] Create `AuthContext` for token management:
+- [x] Create `AuthContext` for token management:
   - Store JWT in memory (not localStorage for security)
   - Auto-refresh mechanism
   - Logout functionality
-- [ ] Create `ProtectedRoute` wrapper component
-- [ ] Set up `axios` instance with:
+- [x] Create `ProtectedRoute` wrapper component
+- [x] Set up `axios` instance with:
   - Base URL from environment
   - Auth token interceptor
   - Error response interceptor (auto-redirect on 401)
 
 #### 5.2 — Dashboard Page (New — Overview)
-- [ ] Create `DashboardPage` — the landing page after login:
+- [x] Create `DashboardPage` — the landing page after login:
   - **Stats Cards**: Total connected accounts, Active tasks, Tasks executed today, Upcoming next actions
   - **Upcoming Actions** widget: Next 5 scheduled task executions (task name, time, target)
   - **Recent Activity** widget: Last 10 execution logs (task name, status, time)
@@ -626,14 +626,14 @@ Users can register, log in, see a comprehensive dashboard (total accounts, activ
   - Empty states for new users with onboarding guidance
 
 #### 5.3 — Telegram Accounts Page
-- [ ] Create `TelegramAccountsPage`:
+- [x] Create `TelegramAccountsPage`:
   - Lists all connected Telegram accounts as cards
   - Each card shows: phone number, name, status badge (Active/Disconnected/Locked), active tasks count, last activity
   - "Add Telegram Account" button (prominent, large)
   - Empty state when no accounts connected
 
 #### 5.4 — Add Telegram Account Flow
-- [ ] Create `AddAccountDialog` (modal or full-page):
+- [x] Create `AddAccountDialog` (modal or full-page):
   - **Step 1**: Phone number input with country code selector
     - Format: `+880 1XXX-XXXXXX`
     - Submit → calls `send-code` API
@@ -646,18 +646,18 @@ Users can register, log in, see a comprehensive dashboard (total accounts, activ
   - **Step 3**: Success confirmation
     - Show connected account details
     - "Go to Dashboard" or "Create First Task" button
-- [ ] Handle errors gracefully:
+- [x] Handle errors gracefully:
   - Phone number already connected
   - Invalid code
   - Flood wait (show timer)
   - Account limit reached
 
 #### 5.5 — Layout & Navigation
-- [ ] Create `AppLayout` with:
+- [x] Create `AppLayout` with:
   - **Sidebar navigation** (desktop): Dashboard, Telegram Accounts, Tasks, Templates, Activity Logs, Off Days, Settings
   - **Bottom navigation** (mobile): Dashboard, Tasks, Accounts, More (opens drawer with remaining items)
   - Top header with app name, user email, logout button
-- [ ] Set up React Router:
+- [x] Set up React Router:
   - `/login` → LoginPage
   - `/register` → RegisterPage
   - `/dashboard` → DashboardPage
@@ -670,7 +670,7 @@ Users can register, log in, see a comprehensive dashboard (total accounts, activ
   - `/off-days` → OffDaysPage (Phase 6)
   - `/settings` → SettingsPage (Phase 6)
   - `/admin/*` → Admin pages (Phase 7)
-- [ ] Implement toast notifications using `react-hot-toast`
+- [x] Implement toast notifications using `react-hot-toast`
 
 ---
 

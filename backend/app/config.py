@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     TELEGRAM_API_ID: int
     TELEGRAM_API_HASH: str
     
+    # CORS
+    CORS_ORIGINS: list[str] = ["*"]
+    
     # Admin
     ADMIN_EMAIL: str = "admin@example.com"
 
