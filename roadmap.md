@@ -581,7 +581,7 @@ For tasks that send photos, videos, or documents:
 
 ## Phase 5 — Frontend: Auth, Dashboard & Account Management UI
 
-> **🔧 Skill**: Apply `vercel-react-best-practices` — especially `bundle-dynamic-imports` for code splitting, `rerender-memo` for list rendering, `client-swr-dedup` for data fetching, and `rendering-conditional-render` for conditional UI.
+> **🔧 Skill**: Apply `vercel-react-best-practices` — especially `bundle-dynamic-imports` for code splitting, `rerender-memo` for list rendering, `client-swr-dedup` for data fetching, and `rendering-conditional-render` for conditional UI. and shadcn-ui skills.
 
 ### Purpose
 Build the user-facing frontend where users can register, log in, see the overview dashboard, and manage their connected Telegram accounts. This is the user's first impression of the platform.
@@ -676,7 +676,7 @@ Users can register, log in, see a comprehensive dashboard (total accounts, activ
 
 ## Phase 6 — Frontend: Task System, Templates & Settings UI
 
-> **🔧 Skill**: Apply `vercel-react-best-practices` — `rendering-content-visibility` for sticker grid rendering, `rerender-derived-state` for task form state management, `async-parallel` for parallel data fetching, `bundle-preload` for navigation preloading.
+> **🔧 Skill**: Apply `vercel-react-best-practices` — `rendering-content-visibility` for sticker grid rendering, `rerender-derived-state` for task form state management, `async-parallel` for parallel data fetching, `bundle-preload` for navigation preloading. and shadcn-ui skills.
 
 ### Purpose
 Build the core product UI — the task creation wizard, task list, template browser, activity log viewer, off days management, and settings page. This is where users will spend most of their time.
@@ -782,7 +782,7 @@ Users can fully use the platform: browse templates for quick start, create custo
 
 ## Phase 7 — Admin Dashboard & System Controls
 
-> **🔧 Skills**: Apply `rest-api-design` for admin API endpoints. Apply `vercel-react-best-practices` for admin React components.
+> **🔧 Skills**: Apply `rest-api-design` for admin API endpoints. Apply `vercel-react-best-practices` for admin React components and shadcn-ui skills.
 
 ### Purpose
 Build the admin panel that gives system administrators full visibility and control over all users, Telegram accounts, tasks, and the scheduler engine. Essential for system management, abuse prevention, and operational stability — especially as the platform scales to multiple users.

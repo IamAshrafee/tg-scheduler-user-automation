@@ -44,3 +44,5 @@ description: Document phase completion by creating a comprehensive XX_done_overv
 
 4. **Notify User**:
    - "Phase [N] Complete. Documentation created at [XX_done_overview.md]. Ready for Phase [N+1]."
+
+5. **Also guide To the previously completed all the passes in short and guide them to those done overview.md files and tell them to read those so that the document will also contain the whole context.

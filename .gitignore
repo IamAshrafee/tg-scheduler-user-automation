@@ -20,6 +20,7 @@ yarn-error.log*
 
 # Encryption
 backend/sessions/
+backend/uploads/
 
 # IDE
 .vscode/
