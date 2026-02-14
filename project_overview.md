@@ -1,12 +1,24 @@
-Project Overview
+# Project Overview — Telegram Automation Platform
 
 ---
 
-This project is a web-based automation system powered by a Python backend that controls Telegram user accounts. The purpose of the system is to remove the need for daily manual scheduling of attendance stickers in a Telegram group.
+This project is a web-based **Telegram Automation Platform** powered by a Python backend that controls Telegram user accounts. The system allows users to automate any repetitive Telegram action — sending stickers, messages, photos, videos, documents, or forwarding messages — based on time, date, or custom rules.
 
-In the current situation, employees must send specific stickers at fixed times such as duty start, break, break end, and duty end. Because Telegram Premium is not available, they must manually schedule these stickers every single day. This process is repetitive, time-consuming, and easy to forget.
+## Origin Story
 
-This system will solve that problem by allowing users to connect their Telegram accounts once, define their daily schedule, and let the system automatically send the correct stickers at the correct times every day. Users can also define off days so the automation stops on those dates.
+The idea started from a specific pain point: employees must send specific attendance stickers at fixed times (duty start, break, break end, duty out) in a Telegram group every day. Since Telegram Premium is not available, they cannot use Telegram's built-in scheduling and must do this manually — a repetitive, time-consuming process that's easy to forget.
+
+But instead of building a narrow tool that only solves attendance, this project takes the **platform approach**: attendance automation becomes just one **template** among many. The system is designed to support any Telegram automation use case.
+
+## Product Identity
+
+This is not an "attendance tool". It is a:
+
+- **Telegram Automation System**
+- **Telegram Scheduler Platform**
+- **Telegram Workflow Engine**
+
+Where "Office Attendance" is simply a ready-made template — one of many.
 
 The system will be hosted on a VPS and controlled through a browser interface.
 
@@ -20,14 +32,14 @@ The system will be hosted on a VPS and controlled through a browser interface.
 
 - Python
 - Telegram Userbot (Telethon or Pyrogram)
-- REST API system
-- Background scheduler (cron or internal worker)
+- REST API system (FastAPI)
+- Background scheduler (APScheduler + Queue/Worker system)
 
 **Frontend**
 
 - React (Vite)
-- shadecn
-- reac hot toast
+- shadcn
+- react-hot-toast
 - react-hook-form
 - zod
 - tailwindcss
@@ -45,20 +57,58 @@ The system will be hosted on a VPS and controlled through a browser interface.
 
 ## Core Purpose
 
-The main goal is to create a stable and simple system where:
+The main goal is to create a stable, generalized automation platform where:
 
-- Each employee logs into their Telegram account once.
-- They select the attendance group.
-- They choose stickers for:
-    - Duty In
-    - Break Start
-    - Break End
-    - Duty Out
-- They set times once.
-- The system runs daily automatically.
-- Off days can be set to pause the schedule.
+- Each user logs into their Telegram account once.
+- They create "Tasks" — automated actions that run on a schedule.
+- Each task specifies: which account, which group/channel, what action, what content, what time, what repeat rule, and what skip days.
+- The system runs automatically based on the configured rules.
+- No daily manual work needed.
 
-No daily manual work needed.
+**Vision: "Set once, forget forever."**
+
+---
+
+## Wide Use Cases
+
+### 1. Office Attendance (Original Use Case)
+- Duty in sticker at 9 AM
+- Break sticker at 1 PM
+- Back from break sticker at 2 PM
+- Duty out sticker at 6 PM
+- Skip on weekly holidays and leave days
+
+This becomes a **ready-made template** that users can select and customize.
+
+### 2. Group Activity Automation
+- Daily good morning message
+- Daily report / status update
+- Reminder messages
+- Recurring announcements
+
+### 3. Content Posting Automation (Channel Owners)
+- Send posts at fixed times
+- Daily content scheduling
+- Weekly campaign messages
+- Scheduled media posts
+
+### 4. Business Notification Automation
+- Daily announcements
+- Offer reminders
+- Event reminders
+- Customer notifications
+
+### 5. Community Management (Admins)
+- Welcome message reminders
+- Rule reminder posts
+- Weekly notices
+- Monthly updates
+
+### 6. Personal Productivity
+- Study reminders
+- Work reminders
+- Habit tracking messages
+- Daily self-check posts
 
 ---
 
@@ -68,57 +118,76 @@ No daily manual work needed.
 
 Each user can connect one or more Telegram accounts.
 
-Each account will have its own schedule and settings.
+Each account will have its own tasks and settings.
 
-### 2. Daily Scheduler
+### 2. Generalized Task System
 
-Users set times once:
+Users create "Tasks" instead of rigid attendance slots.
 
-- Duty In time
-- Break start time
-- Break end time
-- Duty out time
+Each task contains:
 
-The system repeats this daily automatically.
+- Telegram account (which account to use)
+- Target group/channel (where to send)
+- Action type (what to do)
+- Content (the actual sticker/text/media)
+- Time (when to send)
+- Repeat rule (how often)
+- Skip days (when to pause)
 
-### 3. Exclude Days / Off Days
+### 3. Action Types (Flexible)
 
-Users can mark:
+The system supports multiple action types:
 
-- Weekly holidays
-- Specific dates
+1. **Send Sticker** — select from user's sticker packs
+2. **Send Text Message** — plain text or formatted
+3. **Send Photo** — image with optional caption
+4. **Send Video** — video with optional caption
+5. **Send Document** — file attachment
+6. **Forward Message** — forward from another chat/channel
+
+### 4. Scheduler Types (Flexible Repeat Rules)
+
+Users can choose how tasks repeat:
+
+- **Daily** — every day at set time
+- **Weekly** — specific days of the week (e.g., Mon/Wed/Fri)
+- **Monthly** — specific day of month (e.g., 1st, 15th)
+- **Custom days** — pick exact days
+- **Specific dates only** — one-time or specific date list (e.g., only 15 Feb, 20 Feb, 25 Feb)
+
+### 5. Smart Skip System (Off Days)
+
+Users can define:
+
+- Weekly off days (e.g., Friday, Saturday)
+- Festival / holiday dates
 - Leave days
+- Temporary pause (pause/resume schedule)
 
-On those days, no stickers will be sent.
+On skip days, the task does not execute.
 
-### 4. Sticker Selection
+### 6. Template System
 
-User selects from their Telegram stickers:
+Ready-made templates for common use cases:
 
-- Duty in sticker
-- Break sticker
-- Back from break sticker
-- Duty out sticker
+- **Office Attendance** — 4 pre-configured tasks for duty in/out, break
+- **Daily Motivation Post** — one daily message at set time
+- **Channel Promotion** — scheduled content posts
+- **Study Reminder** — recurring personal reminder
 
-These will be saved per account.
+User selects a template → edits time/content → saves. Dramatically improves UX.
 
-### 5. Group Selection
-
-User selects the target Telegram group:
-
-- Attendance group
-- Selected once
-- Saved permanently
-
-### 6. Background Automation
+### 7. Background Automation Engine
 
 The server will:
 
-- Run continuously
-- Check time
-- Send stickers at correct times
-- Skip off days
-- Log success/failure
+- Run continuously (24/7)
+- Execute tasks at correct times
+- Skip on off days
+- Retry on failure (exponential backoff)
+- Prevent duplicate sends
+- Log success/failure for every execution
+- Auto-reconnect disconnected Telegram sessions
 
 ---
 
@@ -128,7 +197,7 @@ The server will:
 
 User creates an account using:
 
-- Gmail
+- Email
 - Password
 
 Basic email verification can be added for safety.
@@ -142,7 +211,31 @@ User logs in using:
 - Email
 - Password
 
-After login, user goes directly to the Telegram Accounts page.
+After login, user goes directly to the **Dashboard**.
+
+---
+
+### Dashboard (New — Overview Page)
+
+The main landing page after login shows:
+
+- Total connected Telegram accounts
+- Active tasks/schedules count
+- Upcoming next actions (next 5)
+- Recent activity log (last 10 actions)
+- Quick action buttons (Create Task, Add Account)
+
+---
+
+### Main Menu (User Side)
+
+- **Dashboard** — Overview
+- **Telegram Accounts** — Manage connected accounts
+- **Tasks / Scheduler** — Create, view, edit automated tasks
+- **Templates** — Browse and use ready-made templates
+- **Activity Logs** — View send history
+- **Off Days** — Global and per-task skip day management
+- **Settings** — Profile, **default timezone**, preferences
 
 ---
 
@@ -151,28 +244,30 @@ After login, user goes directly to the Telegram Accounts page.
 This page shows:
 
 - All connected Telegram accounts
-- Button: “Add Telegram Account”
+- Button: "Add Telegram Account"
 
 Each account card shows:
 
 - Phone number
-- Status (Active / Locked)
+- Status (Active / Disconnected / Locked)
 - Last activity
+- Number of active tasks
 
-Clicking an account opens its dashboard.
+Clicking an account opens its details.
 
 ---
 
 ### Add Telegram Account Flow
 
-User clicks “Add Telegram Account”.
+User clicks "Add Telegram Account".
 
 Steps:
 
 1. Enter phone number
 2. Receive Telegram login code
 3. Enter code
-4. Account connected
+4. (If 2FA enabled) Enter 2FA password
+5. Account connected
 
 After success:
 
@@ -181,84 +276,77 @@ After success:
 
 ---
 
-### Telegram Account Dashboard
+### Task / Scheduler Page (New — Generalized Structure)
 
-This dashboard is specific to one Telegram account.
+Shows all created tasks in a list/card view.
 
-Layout:
+Each task card shows:
 
-- Sidebar on desktop
-- Bottom navigation on mobile
+- Task name
+- Action type icon (sticker, text, photo, etc.)
+- Target group/channel name
+- Next execution time
+- Status (active / paused / failed)
 
-Menu Items:
+**"Create New Task"** button opens a step-by-step flow:
 
-- Scheduler Page
-- Off Days Page
-- Sticker Setup
-- Group Setup
+1. Select Telegram account
+2. Select target group/channel
+3. Select action type (sticker / text / photo / video / document / forward)
+4. Choose content (pick sticker, type text, upload media, etc.)
+5. Set time
+6. Set repeat rule (daily / weekly / monthly / custom / specific dates)
+7. Add skip days (optional)
+8. Name the task
+9. Save
 
----
+Users can also:
 
-### Scheduler Page
-
-User sets daily times:
-
-- Duty in time
-- Break start time
-- Break end time
-- Duty out time
-
-Options:
-
-- Enable/disable schedule
-- Edit times
-- Save changes
-
-System shows:
-
-- Next upcoming action
-- Last sent action
+- Edit existing tasks
+- Enable/disable individual tasks
+- Delete tasks
+- View task execution history
 
 ---
 
-### Sticker Setup Page
+### Templates Page
 
-User selects stickers for:
+Browse available templates:
 
-- Duty in
-- Break
-- Break end
-- Duty out
+- Office Attendance (4 tasks pre-configured)
+- Daily Motivation Post
+- Channel Promotion
+- Study Reminder
+- Custom (create from scratch)
 
-These are saved and reused daily.
+User selects template → system pre-fills task configuration → user customizes → saves.
 
 ---
 
-### Group Setup Page
+### Activity Logs Page
 
-User selects the attendance group.
+Shows history of all task executions:
 
-System will:
+- Task name
+- Action type
+- Time scheduled vs. time sent
+- Status (sent / failed / skipped)
+- Failure reason (if failed)
 
-- Show user’s joined groups
-- Allow selecting one
-
-Saved as target destination.
+Filterable by: account, task, date range, status.
 
 ---
 
 ### Off Days Page
 
-User can:
+User can manage skip days at two levels:
 
-- Add specific dates
-- Add weekly holidays
-- Remove dates
+**Global Off Days** (apply to all tasks):
+- Weekly holidays (e.g., Friday, Saturday)
+- Specific dates (festivals, vacations)
 
-On these days:
-
-- Automation stops
-- No stickers sent
+**Per-Task Off Days** (override per task):
+- Each task can have its own additional skip days
 
 ---
 
@@ -271,14 +359,16 @@ Admin has full control over system and users.
 Admin can:
 
 - View all users
-- Lock user accounts
-- Delete users
-- Limit how many Telegram accounts a user can add
+- Lock/unlock user accounts
+- Delete users and all their data
+- Set per-user Telegram account limits
+- Set per-user task limits
 
 Admin can see:
 
 - Total Telegram accounts per user
-- Activity logs
+- Total tasks per user
+- Activity logs per user
 
 ---
 
@@ -286,13 +376,16 @@ Admin can see:
 
 Admin can:
 
-- Lock a Telegram account
-- Stop its scheduler
-- Prevent sending stickers
+- View all Telegram accounts across all users
+- Lock a specific Telegram account
+- Stop all tasks on an account
+- Force disconnect a session
+- Prevent sending
 
 Useful if:
 
 - Abuse detected
+- Spam risk
 - Server load issues
 - Security concerns
 
@@ -302,10 +395,22 @@ Useful if:
 
 Admin panel includes:
 
-- Hard restart server
+- Restart scheduler engine
 - Clear old logs
 - Backup database
 - Restore backup
+- View system health (uptime, memory, active clients, queue depth)
+- View failed task reports
+
+---
+
+### Admin Safety Tools (For Scale)
+
+- Rate limit sending per account
+- Anti-spam detection (too many messages in short time)
+- Auto-pause risky accounts
+- Monitor and flag abuse patterns
+- Force logout Telegram sessions
 
 ---
 
@@ -324,12 +429,14 @@ Important design points:
 - Easy navigation
 - Big buttons
 - Clear status messages
+- Step-by-step task creation wizard
 
 Example statuses:
 
-- “Next duty in sticker will send at 11:00 AM”
-- “Scheduler paused (Off day)”
-- “Telegram account disconnected”
+- "Next: Send duty in sticker at 11:00 AM"
+- "Task paused (Off day)"
+- "Telegram account disconnected"
+- "3 tasks active, 1 paused"
 
 ---
 
@@ -341,10 +448,26 @@ Security steps:
 
 1. Store Telegram sessions safely and encrypted.
 2. Never store raw passwords.
-3. Use secure login tokens.
-4. Limit API requests.
+3. Use secure login tokens (JWT).
+4. Limit API requests (rate limiting).
 5. Detect spam-like behavior.
 6. Auto stop if too many errors happen.
+7. Anti-spam protection (detect too many messages in short time).
+8. Auto-pause accounts at risk of Telegram ban.
+
+---
+
+## Timezone Handling
+
+Timezone is a first-class concept in this platform:
+
+- Each user sets a **default timezone** in their Settings (e.g., "Asia/Dhaka").
+- When creating a task, the timezone is **inherited from user settings** by default.
+- Users can **override the timezone per task** if needed (e.g., a task targeting a group in a different timezone).
+- All schedule times (duty in at 9:00 AM, etc.) are interpreted in the task's timezone.
+- The scheduler engine converts all times to UTC internally for accurate execution.
+- Activity logs display times in the user's timezone.
+- The dashboard's "Upcoming Actions" and "Next Execution" respect the user's timezone.
 
 ---
 
@@ -352,14 +475,17 @@ Security steps:
 
 To make the system solid:
 
-- Background worker should retry failed sends.
+- Background worker should retry failed sends (exponential backoff).
 - Maintain logs:
     - Sent successfully
     - Failed sends
+    - Skipped (off day, paused, etc.)
     - Time mismatches
 - Auto reconnect Telegram sessions if disconnected.
 - Prevent duplicate sending.
-- Time zone handling must be correct.
+- All timezone conversions must be correct (use `pytz` or `zoneinfo`).
+- Queue system for concurrent task execution.
+- Task recovery on server restart (no data loss).
 
 ---
 
@@ -369,33 +495,43 @@ System should be ready for growth:
 
 - Multiple users
 - Multiple Telegram accounts per user
-- Many schedules running at once
+- Many tasks running at once
+- Hundreds of concurrent schedules
 
 Use:
 
-- Job queue
-- Worker system
-- Smart scheduling
+- Job queue (task queue system)
+- Worker system (process tasks in parallel)
+- Smart scheduling (batch same-time tasks)
+- Failure recovery (auto-retry, circuit breaker)
 
 ---
 
-## Future Possible Features
+## Future Possibilities
 
-- Temporary pause button
+- Temporary pause button (per task or global)
+- Subscription / SaaS model:
+    - Free tier: 1 account, 5 tasks
+    - Pro tier: 5 accounts, unlimited tasks
+    - Business tier: Unlimited everything
+- Webhook triggers (send on external event)
+- Conditional logic (if X then send Y)
+- Analytics dashboard (send success rates, activity trends)
+- Mobile app wrapper
 
 ---
 
 ## Final Vision
 
-This system should feel like:
+This system is a **Telegram Automation Operating System**.
 
-“Set once, forget forever.”
+Where "Office Attendance" is just one module. The platform supports any automation use case.
 
 User connects Telegram once.
 
-User sets times once.
+User creates tasks once.
 
-System handles everything daily.
+System handles everything automatically.
 
 No more manual scheduling.
 
@@ -403,4 +539,4 @@ No more forgetting.
 
 No more stress.
 
-Just simple automation that runs quietly in the background.
+Just simple, powerful automation that runs quietly in the background — forever.
