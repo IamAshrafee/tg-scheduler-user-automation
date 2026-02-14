@@ -439,12 +439,16 @@ const CreateTaskPage = () => {
                                                 sticker_emoji: sticker.emoji || '',
                                                 sticker_set_id: sticker.set_name || '',
                                             })}
-                                            className={`p-2 rounded-lg border text-2xl h-16 flex items-center justify-center transition-all ${form.action_content.sticker_id === String(sticker.id)
+                                            className={`p-2 rounded-lg border h-16 flex items-center justify-center transition-all ${form.action_content.sticker_id === String(sticker.id)
                                                 ? 'border-primary bg-primary/10 ring-1 ring-primary/20'
                                                 : 'border-border hover:bg-muted'
                                                 }`}
                                         >
-                                            {sticker.emoji || '🎭'}
+                                            {sticker.thumbnail ? (
+                                                <img src={sticker.thumbnail} alt={sticker.emoji || 'sticker'} className="h-12 w-12 object-contain" />
+                                            ) : (
+                                                <span className="text-2xl">{sticker.emoji || '🎭'}</span>
+                                            )}
                                         </button>
                                     ))}
                                 </div>

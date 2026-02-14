@@ -283,11 +283,12 @@ class TelegramClientManager:
         return sticker_sets
 
     async def get_stickers_in_set(self, account_id: str, set_short_name: str) -> list:
-        """Fetch individual stickers from a sticker set."""
+        """Fetch individual stickers from a sticker set, including thumbnails."""
         client = await self.get_client(account_id)
         if not client:
             raise Exception("Telegram account is not connected.")
 
+        import base64
         from telethon.tl.functions.messages import GetStickerSetRequest
         from telethon.tl.types import InputStickerSetShortName
 
@@ -299,18 +300,31 @@ class TelegramClientManager:
         )
         stickers = []
         for doc in result.documents:
+            emoji = next(
+                (
+                    pack.emoticon
+                    for pack in result.packs
+                    if doc.id in pack.documents
+                ),
+                "",
+            )
+
+            # Try to download sticker thumbnail as base64
+            thumbnail = None
+            try:
+                thumb_bytes = await client.download_media(doc, file=bytes, thumb=-1)
+                if thumb_bytes:
+                    b64 = base64.b64encode(thumb_bytes).decode("ascii")
+                    thumbnail = f"data:image/webp;base64,{b64}"
+            except Exception:
+                pass
+
             stickers.append({
                 "id": doc.id,
                 "access_hash": doc.access_hash,
-                "emoji": next(
-                    (
-                        pack.emoticon
-                        for pack in result.packs
-                        if doc.id in pack.documents
-                    ),
-                    "",
-                ),
+                "emoji": emoji,
                 "file_reference": doc.file_reference.hex() if doc.file_reference else None,
+                "thumbnail": thumbnail,
             })
         return stickers
 
