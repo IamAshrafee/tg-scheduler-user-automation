@@ -19,11 +19,16 @@ import AdminAccountsPage from './pages/admin/AdminAccountsPage';
 import AdminTasksPage from './pages/admin/AdminTasksPage';
 import AdminSystemPage from './pages/admin/AdminSystemPage';
 
+import TermsPage from './pages/TermsPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+
 function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
