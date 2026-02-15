@@ -9,9 +9,7 @@ import {
     Settings,
     LogOut,
     Command,
-    Activity,
     PlusCircle,
-    CalendarOff,
     Shield,
     Smartphone,
     ListChecks,
@@ -28,8 +26,6 @@ const Sidebar = () => {
         { name: 'Accounts', href: '/accounts', icon: Users },
         { name: 'Tasks', href: '/tasks', icon: CalendarClock },
         { name: 'Templates', href: '/templates', icon: Files },
-        { name: 'Activity Log', href: '/activity', icon: Activity },
-        { name: 'Off Days', href: '/off-days', icon: CalendarOff },
         { name: 'Settings', href: '/settings', icon: Settings },
     ];
 

@@ -11,8 +11,6 @@ import TasksPage from './pages/TasksPage';
 import CreateTaskPage from './pages/CreateTaskPage';
 import TaskDetailPage from './pages/TaskDetailPage';
 import TemplatesPage from './pages/TemplatesPage';
-import ActivityLogsPage from './pages/ActivityLogsPage';
-import OffDaysPage from './pages/OffDaysPage';
 import SettingsPage from './pages/SettingsPage';
 
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
@@ -36,8 +34,6 @@ function App() {
           <Route path="/tasks/:id" element={<TaskDetailPage />} />
           <Route path="/tasks/:id/edit" element={<CreateTaskPage />} />
           <Route path="/templates" element={<TemplatesPage />} />
-          <Route path="/activity" element={<ActivityLogsPage />} />
-          <Route path="/off-days" element={<OffDaysPage />} />
           <Route path="/settings" element={<SettingsPage />} />
 
           {/* Admin routes */}

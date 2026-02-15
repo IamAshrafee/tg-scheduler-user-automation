@@ -235,9 +235,9 @@ The main landing page after login shows:
 - **Telegram Accounts** — Manage connected accounts
 - **Tasks / Scheduler** — Create, view, edit automated tasks
 - **Templates** — Browse and use ready-made templates
-- **Activity Logs** — View send history
-- **Off Days** — Global and per-task skip day management
-- **Settings** — Profile, **default timezone**, preferences
+- **Settings** — Profile, default timezone, global off days, activity logs
+
+> **Design Note**: The sidebar is intentionally lean (5 items) to support a mobile bottom navigation bar. Activity Logs and Off Days are accessible as tabs within the Settings page.
 
 ---
 
@@ -342,7 +342,7 @@ This is the core of the power-user experience. The user sees a list of all tasks
 
 ---
 
-### Activity Logs Page
+### Activity Logs (Settings → Activity Log tab)
 
 Shows history of all task executions:
 
@@ -352,20 +352,25 @@ Shows history of all task executions:
 - Status (sent / failed / skipped)
 - Failure reason (if failed)
 
-Filterable by: account, task, date range, status.
+Filterable by status. Paginated.
 
 ---
 
-### Off Days Page
+### Off Days (Settings → Off Days tab)
 
-User can manage skip days at two levels:
+Global off days pause **ALL tasks** across **ALL Telegram accounts** at once.  
+Use this for vacations, national holidays, or any day you want every automation to stop.
+
+Users can configure:
 
 **Global Off Days** (apply to all tasks):
 - Weekly holidays (e.g., Friday, Saturday)
 - Specific dates (festivals, vacations)
 
-**Per-Task Off Days** (override per task):
+**Per-Task Skip Days** (configured when creating/editing a task):
 - Each task can have its own additional skip days
+
+> Individual tasks can also have their own skip days — configured separately in the task creation wizard.
 
 ---
 

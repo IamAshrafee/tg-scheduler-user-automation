@@ -1274,3 +1274,21 @@ Comprehensive `template_creation_guide.md` created.
 ### Tasks
 - [x] Create `template_creation_guide.md` documenting `backend/app/models/template.py` structure.
 
+---
+
+## Phase 12 — Navigation Consolidation (Mobile-Ready)
+
+### Purpose
+Reduce the sidebar navigation from 7 items to 5, preparing the UI for a mobile bottom navigation bar. Off Days and Activity Log are consolidated into the Settings page as tabs.
+
+### Result
+Settings page now has 3 tabs: **General** (profile, timezone, password), **Off Days** (weekly holidays + specific dates with descriptive banner), **Activity Log** (paginated table with status filters). Sidebar shows: Dashboard, Accounts, Tasks, Templates, Settings.
+
+### Tasks
+- [x] Rewrite `SettingsPage.jsx` with 3-tab layout
+- [x] Add proper Off Days description explaining global vs per-task skip days
+- [x] Remove "Off Days" and "Activity Log" from `Sidebar.jsx`
+- [x] Remove routes and imports from `App.jsx`
+- [x] Delete `OffDaysPage.jsx` and `ActivityLogsPage.jsx`
+- [x] Update `project_overview.md` to reflect new navigation structure
+
