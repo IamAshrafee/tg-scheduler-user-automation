@@ -956,7 +956,7 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
 
 - [ ] **Domain setup** — free subdomain via [DuckDNS](https://www.duckdns.org/):
   - Go to `https://www.duckdns.org/` → sign in with Google/GitHub
-  - Create a free subdomain, e.g. `tg-auto.duckdns.org`
+  - Create a free subdomain, e.g. `tg-auto-schedular.giize.com`
   - Point it to VPS IP: `62.72.42.124`
   - DuckDNS is free, no expiry, supports Let's Encrypt SSL
   - **Alternative**: Access via direct IP `http://62.72.42.124:8080` (simpler but no SSL)
@@ -1028,11 +1028,11 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
   - Nginx serves it as static files (see below)
 
 - [ ] **Nginx configuration** — new server block for the subdomain:
-  - Create `/etc/nginx/sites-available/tg-auto.duckdns.org`:
+  - Create `/etc/nginx/sites-available/tg-auto-schedular.giize.com`:
     ```nginx
     server {
         listen 80;
-        server_name tg-auto.duckdns.org;
+        server_name tg-auto-schedular.giize.com;
 
         # Frontend — static files
         root /var/www/tg-platform/frontend/dist;
@@ -1072,18 +1072,18 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
     ```
   - Enable the site:
     ```bash
-    sudo ln -s /etc/nginx/sites-available/tg-auto.duckdns.org /etc/nginx/sites-enabled/
+    sudo ln -s /etc/nginx/sites-available/tg-auto-schedular.giize.com /etc/nginx/sites-enabled/
     sudo nginx -t
     sudo systemctl reload nginx
     ```
 
 - [ ] **SSL certificate** (Let's Encrypt via Certbot):
   ```bash
-  sudo certbot --nginx -d tg-auto.duckdns.org
+  sudo certbot --nginx -d tg-auto-schedular.giize.com
   ```
   - Certbot auto-modifies the Nginx config to add SSL directives
   - Auto-renewal is handled by Certbot's systemd timer
-  - Result: `https://tg-auto.duckdns.org` with valid SSL ✓
+  - Result: `https://tg-auto-schedular.giize.com` with valid SSL ✓
 
 - [ ] **Deployment script** — create `/var/www/tg-platform/deploy.sh`:
   ```bash
@@ -1120,7 +1120,7 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
   | `pm2 monit` | Real-time resource monitor |
 
 - [ ] **Monitoring**:
-  - UptimeRobot: ping `https://tg-auto.duckdns.org/api/v1/health` (free tier)
+  - UptimeRobot: ping `https://tg-auto-schedular.giize.com/api/v1/health` (free tier)
   - PM2: built-in auto-restart on crash + logs
   - Telegram bot notification to admin on task failures (built into Phase 7)
   - Log rotation: `pm2-logrotate` already installed on VPS ✓
