@@ -38,6 +38,17 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
+        // Handle 403 Forbidden (Account Locked)
+        if (error.response && error.response.status === 403) {
+            const detail = error.response.data?.detail || '';
+            if (detail.includes('Account locked')) {
+                // Force a reload to trigger checkAuth which will fetch user status
+                // Or if checkAuth fails, it will handle it.
+                // For now, we want the UI to update.
+                window.location.reload();
+            }
+        }
+
         return Promise.reject(error);
     }
 );

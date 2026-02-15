@@ -37,7 +37,12 @@ const LoginPage = () => {
             toast.success('Welcome back!');
             navigate(from, { replace: true });
         } catch (error) {
-            toast.error('Invalid email or password');
+            const detail = error.response?.data?.detail || '';
+            if (detail.includes('Account locked')) {
+                toast.error('Account locked. Please contact administrator.');
+            } else {
+                toast.error('Invalid email or password');
+            }
         } finally {
             setIsLoading(false);
         }

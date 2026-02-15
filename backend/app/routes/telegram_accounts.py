@@ -170,6 +170,36 @@ async def delete_account(
     return None
 
 
+@router.post("/{account_id}/reconnect", response_model=TelegramAccountResponse)
+async def reconnect_account(
+    account_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    """
+    Manually trigger a session validation check. 
+    Updates DB status to 'active' or 'disconnected' based on live check.
+    """
+    account = await telegram_account_service.get_by_id(account_id)
+    if not account or account.user_id != str(current_user.id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found.")
+
+    try:
+        client = await telegram_client_manager.get_client(account_id)
+        if client:
+            # Success - update status to active
+            updated = await telegram_account_service.update_status(account_id, "active")
+            return updated
+        else:
+            # Failure - update status to disconnected
+            updated = await telegram_account_service.update_status(account_id, "disconnected")
+            return updated
+    except Exception as e:
+        logger.exception("Reconnect failed for account %s", account_id)
+        # On error, we assume it's disconnected
+        updated = await telegram_account_service.update_status(account_id, "disconnected")
+        return updated
+
+
 # ─── Data Fetching Endpoints ───
 
 @router.get("/{account_id}/groups")

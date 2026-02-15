@@ -34,6 +34,9 @@ async def execute_task(task: Task, dry_run: bool = False) -> dict:
         result["status"] = "failed"
         result["reason"] = "Telegram account is not connected or session expired."
         if not dry_run:
+            # Auto-disconnect account in DB so other tasks don't keep trying/failing
+            from app.services.telegram_account_service import telegram_account_service
+            await telegram_account_service.update_status(account_id, "disconnected")
             await _log_execution(task, result)
         return result
 

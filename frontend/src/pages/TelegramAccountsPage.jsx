@@ -42,12 +42,19 @@ const TelegramAccountsPage = () => {
     };
 
     const handleReconnect = async (accountId) => {
+        const loadingToast = toast.loading('Verifying session...');
         try {
-            await api.post(`/telegram-accounts/${accountId}/reconnect`);
-            toast.success('Reconnection attempt started');
+            const response = await api.post(`/telegram-accounts/${accountId}/reconnect`);
+            toast.dismiss(loadingToast);
+            if (response.data.status === 'active') {
+                toast.success('Account is connected and active');
+            } else {
+                toast.error('Session expired. Please re-add the account.');
+            }
             fetchAccounts();
         } catch (error) {
-            toast.error('Failed to reconnect. Please try adding the account again.');
+            toast.dismiss(loadingToast);
+            toast.error('Failed to verify session');
         }
     };
 
@@ -113,11 +120,15 @@ const TelegramAccountsPage = () => {
                             </div>
                         </CardContent>
                         <CardFooter className="flex items-center justify-end gap-2 bg-muted/40 p-4">
-                            {account.status === 'disconnected' && (
-                                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => handleReconnect(account._id)}>
-                                    <RefreshCw className="mr-2 h-3 w-3" /> Reconnect
-                                </Button>
-                            )}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 text-xs"
+                                onClick={() => handleReconnect(account._id)}
+                            >
+                                <RefreshCw className="mr-2 h-3 w-3" />
+                                {account.status === 'active' ? 'Verify' : 'Reconnect'}
+                            </Button>
                             <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleDisconnect(account._id)}>
                                 <LogOut className="mr-2 h-3 w-3" /> Disconnect
                             </Button>
