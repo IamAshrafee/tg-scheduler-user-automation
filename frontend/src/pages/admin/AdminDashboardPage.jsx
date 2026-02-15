@@ -12,6 +12,7 @@ import {
     CheckCircle2,
     MinusCircle,
 } from 'lucide-react';
+import { Skeleton } from '../../components/ui/skeleton';
 
 const AdminDashboardPage = () => {
     const [stats, setStats] = useState(null);
@@ -31,26 +32,20 @@ const AdminDashboardPage = () => {
         fetchStats();
     }, []);
 
-    if (isLoading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+
 
     const statCards = [
-        { label: 'Total Users', value: stats?.total_users || 0, icon: Users, color: 'text-blue-500' },
-        { label: 'TG Accounts', value: stats?.total_accounts || 0, icon: Smartphone, color: 'text-emerald-500' },
-        { label: 'Total Tasks', value: stats?.total_tasks || 0, icon: ListChecks, color: 'text-purple-500' },
-        { label: 'Active Tasks', value: stats?.active_tasks || 0, icon: Activity, color: 'text-amber-500' },
+        { label: 'Total Users', value: isLoading ? <Skeleton className="h-8 w-16" /> : (stats?.total_users || 0), icon: Users, color: 'text-blue-500' },
+        { label: 'TG Accounts', value: isLoading ? <Skeleton className="h-8 w-16" /> : (stats?.total_accounts || 0), icon: Smartphone, color: 'text-emerald-500' },
+        { label: 'Total Tasks', value: isLoading ? <Skeleton className="h-8 w-16" /> : (stats?.total_tasks || 0), icon: ListChecks, color: 'text-purple-500' },
+        { label: 'Active Tasks', value: isLoading ? <Skeleton className="h-8 w-16" /> : (stats?.active_tasks || 0), icon: Activity, color: 'text-amber-500' },
     ];
 
     const todayCards = [
-        { label: 'Executed', value: stats?.today?.total || 0, icon: TrendingUp, color: 'text-blue-400' },
-        { label: 'Sent', value: stats?.today?.sent || 0, icon: CheckCircle2, color: 'text-emerald-400' },
-        { label: 'Failed', value: stats?.today?.failed || 0, icon: XCircle, color: 'text-red-400' },
-        { label: 'Skipped', value: stats?.today?.skipped || 0, icon: MinusCircle, color: 'text-zinc-400' },
+        { label: 'Executed', value: isLoading ? <Skeleton className="h-6 w-12" /> : (stats?.today?.total || 0), icon: TrendingUp, color: 'text-blue-400' },
+        { label: 'Sent', value: isLoading ? <Skeleton className="h-6 w-12" /> : (stats?.today?.sent || 0), icon: CheckCircle2, color: 'text-emerald-400' },
+        { label: 'Failed', value: isLoading ? <Skeleton className="h-6 w-12" /> : (stats?.today?.failed || 0), icon: XCircle, color: 'text-red-400' },
+        { label: 'Skipped', value: isLoading ? <Skeleton className="h-6 w-12" /> : (stats?.today?.skipped || 0), icon: MinusCircle, color: 'text-zinc-400' },
     ];
 
     return (
@@ -68,7 +63,7 @@ const AdminDashboardPage = () => {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-xs text-muted-foreground">{s.label}</p>
-                                    <p className="text-2xl font-bold mt-1">{s.value}</p>
+                                    <div className="mt-1 text-2xl font-bold">{s.value}</div>
                                 </div>
                                 <s.icon className={`h-5 w-5 ${s.color}`} />
                             </div>
@@ -88,7 +83,7 @@ const AdminDashboardPage = () => {
                             <div key={s.label} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                                 <s.icon className={`h-4 w-4 ${s.color}`} />
                                 <div>
-                                    <p className="text-lg font-semibold">{s.value}</p>
+                                    <div className="text-lg font-semibold">{s.value}</div>
                                     <p className="text-xs text-muted-foreground">{s.label}</p>
                                 </div>
                             </div>
@@ -105,7 +100,16 @@ const AdminDashboardPage = () => {
                         <CardTitle className="text-sm">Top Users by Tasks</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {(stats?.top_users || []).length > 0 ? (
+                        {isLoading ? (
+                            <div className="space-y-2">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="flex items-center justify-between p-2">
+                                        <Skeleton className="h-4 w-32" />
+                                        <Skeleton className="h-4 w-16" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (stats?.top_users || []).length > 0 ? (
                             <div className="space-y-2">
                                 {stats.top_users.map((u, i) => (
                                     <div key={u.user_id} className="flex items-center justify-between text-sm p-2 rounded-md bg-muted/30">
@@ -129,7 +133,19 @@ const AdminDashboardPage = () => {
                         <CardTitle className="text-sm">Recent Failures</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        {(stats?.recent_failures || []).length > 0 ? (
+                        {isLoading ? (
+                            <div className="space-y-2">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="p-2 space-y-2">
+                                        <div className="flex justify-between">
+                                            <Skeleton className="h-4 w-24" />
+                                            <Skeleton className="h-3 w-12" />
+                                        </div>
+                                        <Skeleton className="h-3 w-full" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (stats?.recent_failures || []).length > 0 ? (
                             <div className="space-y-2">
                                 {stats.recent_failures.map(f => (
                                     <div key={f._id} className="text-sm p-2 rounded-md bg-red-500/5 border border-red-500/10">

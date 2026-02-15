@@ -22,6 +22,9 @@ import {
     Filter,
     Search,
 } from 'lucide-react';
+import PageTransition from '../components/common/PageTransition';
+import { SkeletonCard } from '../components/ui/skeleton';
+import { Select } from '../components/ui/select';
 
 const ACTION_ICONS = {
     send_sticker: Sticker,
@@ -107,16 +110,10 @@ const TasksPage = () => {
             task.target?.chat_title?.toLowerCase().includes(searchQuery.toLowerCase());
     });
 
-    if (isLoading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <PageTransition className="space-y-6">
             {/* Header */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
@@ -143,20 +140,20 @@ const TasksPage = () => {
                         className="flex h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     />
                 </div>
-                <select
+                <Select
                     value={filterStatus}
                     onChange={e => setFilterStatus(e.target.value)}
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="w-full sm:w-[150px]"
                 >
                     <option value="">All Status</option>
                     <option value="active">Active</option>
                     <option value="paused">Paused</option>
                     <option value="error">Error</option>
-                </select>
-                <select
+                </Select>
+                <Select
                     value={filterAction}
                     onChange={e => setFilterAction(e.target.value)}
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="w-full sm:w-[150px]"
                 >
                     <option value="">All Actions</option>
                     <option value="send_sticker">Sticker</option>
@@ -165,11 +162,17 @@ const TasksPage = () => {
                     <option value="send_video">Video</option>
                     <option value="send_document">Document</option>
                     <option value="forward_message">Forward</option>
-                </select>
+                </Select>
             </div>
 
             {/* Tasks Grid */}
-            {filteredTasks.length > 0 ? (
+            {isLoading ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <SkeletonCard key={i} />
+                    ))}
+                </div>
+            ) : filteredTasks.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {filteredTasks.map(task => {
                         const ActionIcon = ACTION_ICONS[task.action_type] || CalendarClock;
@@ -303,7 +306,7 @@ const TasksPage = () => {
                     </div>
                 </div>
             </Modal>
-        </div>
+        </PageTransition>
     );
 };
 

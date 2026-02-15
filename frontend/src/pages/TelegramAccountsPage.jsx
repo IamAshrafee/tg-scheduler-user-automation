@@ -4,6 +4,8 @@ import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '../components/ui/card';
 import { Loader2, Plus, LogOut, RefreshCw, Smartphone, Shield, Activity, Calendar } from 'lucide-react';
 import AddAccountDialog from '../components/AddAccountDialog';
+import PageTransition from '../components/common/PageTransition';
+import { SkeletonCard } from '../components/ui/skeleton';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -49,16 +51,10 @@ const TelegramAccountsPage = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <PageTransition className="space-y-8">
             <div className="flex items-center justify-between">
                 <div className="space-y-1">
                     <h2 className="text-3xl font-bold tracking-tight">Telegram Accounts</h2>
@@ -70,10 +66,16 @@ const TelegramAccountsPage = () => {
             </div>
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {accounts.map((account) => (
+                {isLoading ? (
+                    <div className="col-span-full grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        {[1, 2, 3, 4].map(i => (
+                            <SkeletonCard key={i} />
+                        ))}
+                    </div>
+                ) : accounts.map((account) => (
                     <Card key={account._id} className="overflow-hidden transition-all hover:shadow-md border-muted">
-                        <div className={`h-2 w-full ${account.status === 'active' ? 'bg-green-500' :
-                                account.status === 'disconnected' ? 'bg-red-500' : 'bg-yellow-500'
+                        <div className={`h-2 w-full ${account.status === 'active' ? 'bg-emerald-500' :
+                            account.status === 'disconnected' ? 'bg-red-500' : 'bg-amber-500'
                             }`} />
                         <CardHeader className="pb-3 pt-5">
                             <div className="flex items-start justify-between">
@@ -87,8 +89,8 @@ const TelegramAccountsPage = () => {
                                         {account.phone_number}
                                     </CardDescription>
                                 </div>
-                                <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${account.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' :
-                                        account.status === 'disconnected' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                                <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide border ${account.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' :
+                                    account.status === 'disconnected' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                                     }`}>
                                     {account.status}
                                 </div>
@@ -144,7 +146,7 @@ const TelegramAccountsPage = () => {
                 onClose={() => setIsAddDialogOpen(false)}
                 onSuccess={fetchAccounts}
             />
-        </div>
+        </PageTransition>
     );
 };
 

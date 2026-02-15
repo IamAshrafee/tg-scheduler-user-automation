@@ -19,10 +19,10 @@ const Modal = ({ isOpen, onClose, title, children, className }) => {
     if (!isOpen) return null;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in-0">
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in-0">
             <div
                 className={cn(
-                    "relative w-full max-w-lg rounded-lg bg-background p-6 shadow-lg animate-in zoom-in-95",
+                    "relative w-full max-w-lg rounded-t-xl sm:rounded-lg bg-background p-6 shadow-lg duration-200 animate-in slide-in-from-bottom-10 sm:zoom-in-95",
                     className
                 )}
             >

@@ -25,6 +25,9 @@ import {
     LogOut,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import PageTransition from '../components/common/PageTransition';
+import { Select } from '../components/ui/select';
+import { Skeleton } from '../components/ui/skeleton';
 
 const TIMEZONE_OPTIONS = [
     { value: 'UTC', label: 'UTC (GMT+0)' },
@@ -312,13 +315,7 @@ const OffDaysTab = () => {
         }
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+
 
     return (
         <div className="space-y-6">
@@ -345,18 +342,24 @@ const OffDaysTab = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex gap-2 flex-wrap">
-                        {DAY_NAMES.map((day, idx) => (
-                            <button
-                                key={idx}
-                                onClick={() => toggleWeekday(idx)}
-                                className={`px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${weeklyHolidays.includes(idx)
-                                    ? 'border-red-500 bg-red-500/10 text-red-500 shadow-sm'
-                                    : 'border-border hover:bg-muted hover:border-primary/30'
-                                    }`}
-                            >
-                                {day}
-                            </button>
-                        ))}
+                        {isLoading ? (
+                            DAY_NAMES.map((_, idx) => (
+                                <Skeleton key={idx} className="h-10 w-16" />
+                            ))
+                        ) : (
+                            DAY_NAMES.map((day, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => toggleWeekday(idx)}
+                                    className={`px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${weeklyHolidays.includes(idx)
+                                        ? 'border-red-500 bg-red-500/10 text-red-500 shadow-sm'
+                                        : 'border-border hover:bg-muted hover:border-primary/30'
+                                        }`}
+                                >
+                                    {day}
+                                </button>
+                            ))
+                        )}
                     </div>
                     {hasChanges && (
                         <Button size="sm" onClick={saveWeeklyHolidays} disabled={isSaving}>
@@ -386,7 +389,13 @@ const OffDaysTab = () => {
                         </Button>
                     </div>
 
-                    {(offDays?.specific_dates || []).length > 0 ? (
+                    {isLoading ? (
+                        <div className="flex flex-wrap gap-2">
+                            {[1, 2, 3].map(i => (
+                                <Skeleton key={i} className="h-6 w-24" />
+                            ))}
+                        </div>
+                    ) : (offDays?.specific_dates || []).length > 0 ? (
                         <div className="flex flex-wrap gap-2">
                             {offDays.specific_dates
                                 .sort((a, b) => a.localeCompare(b))
@@ -467,39 +476,45 @@ const ActivityLogTab = () => {
         <div className="space-y-4">
             {/* Filter */}
             <div className="flex justify-end">
-                <select
+                <Select
                     value={filterStatus}
                     onChange={e => { setFilterStatus(e.target.value); setPage(0); }}
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring w-auto"
+                    className="w-auto min-w-[140px]"
                 >
                     <option value="">All Status</option>
                     <option value="sent">Sent</option>
                     <option value="failed">Failed</option>
                     <option value="skipped">Skipped</option>
-                </select>
+                </Select>
             </div>
 
             {/* Logs Table */}
             <Card>
                 <CardContent className="p-0">
-                    {isLoading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                        </div>
-                    ) : logs.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                                <thead>
-                                    <tr className="border-b bg-muted/30">
-                                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">Status</th>
-                                        <th className="text-left p-3 font-medium text-muted-foreground text-xs">Task</th>
-                                        <th className="text-left p-3 font-medium text-muted-foreground text-xs hidden md:table-cell">Action</th>
-                                        <th className="text-left p-3 font-medium text-muted-foreground text-xs hidden lg:table-cell">Details</th>
-                                        <th className="text-right p-3 font-medium text-muted-foreground text-xs">Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {logs.map(log => (
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b bg-muted/30">
+                                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Status</th>
+                                    <th className="text-left p-3 font-medium text-muted-foreground text-xs">Task</th>
+                                    <th className="text-left p-3 font-medium text-muted-foreground text-xs hidden md:table-cell">Action</th>
+                                    <th className="text-left p-3 font-medium text-muted-foreground text-xs hidden lg:table-cell">Details</th>
+                                    <th className="text-right p-3 font-medium text-muted-foreground text-xs">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {isLoading ? (
+                                    [1, 2, 3, 4, 5].map(i => (
+                                        <tr key={i} className="border-b last:border-0">
+                                            <td className="p-3"><Skeleton className="h-4 w-16" /></td>
+                                            <td className="p-3"><Skeleton className="h-4 w-32" /></td>
+                                            <td className="p-3 hidden md:table-cell"><Skeleton className="h-4 w-20" /></td>
+                                            <td className="p-3 hidden lg:table-cell"><Skeleton className="h-4 w-full max-w-[200px]" /></td>
+                                            <td className="p-3"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                                        </tr>
+                                    ))
+                                ) : logs.length > 0 ? (
+                                    logs.map(log => (
                                         <tr key={log._id} className="border-b last:border-0 hover:bg-muted/20 transition-colors">
                                             <td className="p-3">
                                                 <div className="flex items-center gap-2">
@@ -531,16 +546,18 @@ const ActivityLogTab = () => {
                                                 </span>
                                             </td>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <Activity className="h-10 w-10 text-muted-foreground opacity-30 mb-3" />
-                            <p className="text-muted-foreground text-sm">No activity logs found.</p>
-                        </div>
-                    )}
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="py-16 text-center">
+                                            <Activity className="h-10 w-10 text-muted-foreground opacity-30 mx-auto mb-3" />
+                                            <p className="text-muted-foreground text-sm">No activity logs found.</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -577,7 +594,7 @@ const SettingsPage = () => {
     const [activeTab, setActiveTab] = useState('general');
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
+        <PageTransition className="max-w-2xl mx-auto space-y-6">
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
@@ -609,7 +626,7 @@ const SettingsPage = () => {
             {activeTab === 'general' && <GeneralTab user={user} logout={logout} />}
             {activeTab === 'off-days' && <OffDaysTab />}
             {activeTab === 'activity' && <ActivityLogTab />}
-        </div>
+        </PageTransition>
     );
 };
 

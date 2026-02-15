@@ -5,13 +5,14 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import TemplateInstantiationDialog from '../components/templates/TemplateInstantiationDialog';
 import {
-    Loader2,
     Sparkles,
     Briefcase,
     Megaphone,
     Users,
     BookOpen,
 } from 'lucide-react';
+import PageTransition from '../components/common/PageTransition';
+import { SkeletonCard } from '../components/ui/skeleton';
 
 const CATEGORY_CONFIG = {
     work: { icon: Briefcase, color: 'text-blue-500', bg: 'bg-blue-500/10' },
@@ -46,16 +47,10 @@ const TemplatesPage = () => {
         setIsDialogOpen(true);
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <PageTransition className="space-y-6">
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-bold tracking-tight">Templates</h1>
@@ -65,7 +60,13 @@ const TemplatesPage = () => {
             </div>
 
             {/* Templates Grid */}
-            {templates.length > 0 ? (
+            {isLoading ? (
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                        <SkeletonCard key={i} />
+                    ))}
+                </div>
+            ) : templates.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {templates.map(template => {
                         const cat = CATEGORY_CONFIG[template.category] || CATEGORY_CONFIG.work;
@@ -144,7 +145,7 @@ const TemplatesPage = () => {
                 template={selectedTemplate}
                 onSuccess={() => navigate('/tasks')}
             />
-        </div>
+        </PageTransition>
     );
 };
 

@@ -20,8 +20,8 @@ const MobileBottomNav = () => {
     const location = useLocation();
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden border-t border-border bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
-            <div className="flex items-center justify-around h-16 px-1 pb-safe">
+        <div className="md:hidden fixed bottom-0 left-0 right-0 border-t bg-background/80 backdrop-blur-md z-50 pb-safe">
+            <div className="flex justify-around items-center h-16 px-1">
                 {navItems.map(item => {
                     const isActive = item.href === '/dashboard'
                         ? location.pathname === '/dashboard' || location.pathname === '/'
@@ -53,7 +53,7 @@ const MobileBottomNav = () => {
                     );
                 })}
             </div>
-        </nav>
+        </div>
     );
 };
 

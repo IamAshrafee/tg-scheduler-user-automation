@@ -4,7 +4,9 @@ import api from '../services/api';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card';
 import { Link } from 'react-router-dom';
-import { Plus, Users, CalendarClock, Activity, Loader2, ArrowRight } from 'lucide-react';
+import { Plus, Users, CalendarClock, Activity, ArrowRight } from 'lucide-react';
+import PageTransition from '../components/common/PageTransition';
+import { SkeletonStatsGrid, SkeletonCard, Skeleton } from '../components/ui/skeleton';
 
 const DashboardPage = () => {
     const { user } = useAuth();
@@ -63,44 +65,16 @@ const DashboardPage = () => {
         fetchData();
     }, []);
 
-    if (isLoading) {
-        return (
-            <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+
 
     // Get greeting based on time
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
     return (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <PageTransition className="space-y-8">
             {/* Welcome Banner */}
-            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 p-8 text-white shadow-xl">
-                <div className="relative z-10 space-y-2">
-                    <h2 className="text-3xl font-bold tracking-tight">{greeting}, {user?.email?.split('@')[0]}</h2>
-                    <p className="max-w-[600px] text-violet-100">
-                        Your automation hub is running smoothly. detailed executing logs and manage your telegram empire from here.
-                    </p>
-                    <div className="pt-4 flex gap-3">
-                        <Link to="/tasks/create">
-                            <Button variant="secondary" className="bg-white text-violet-600 hover:bg-violet-50 border-0">
-                                <Plus className="mr-2 h-4 w-4" /> Create Task
-                            </Button>
-                        </Link>
-                        <Link to="/accounts">
-                            <Button variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10 hover:text-white">
-                                Manage Accounts
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-                {/* Decorative circles */}
-                <div className="absolute top-0 right-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-                <div className="absolute bottom-0 right-20 -mb-10 h-40 w-40 rounded-full bg-black/10 blur-2xl" />
-            </div>
+
 
             {/* Stats Grid */}
             <div className="grid gap-4 md:grid-cols-3">
@@ -110,7 +84,9 @@ const DashboardPage = () => {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalAccounts}</div>
+                        <div className="text-2xl font-bold">
+                            {isLoading ? <Skeleton className="h-8 w-16" /> : stats.totalAccounts}
+                        </div>
                         <p className="text-xs text-muted-foreground">Telegram accounts active</p>
                     </CardContent>
                 </Card>
@@ -120,7 +96,9 @@ const DashboardPage = () => {
                         <CalendarClock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.activeTasks}</div>
+                        <div className="text-2xl font-bold">
+                            {isLoading ? <Skeleton className="h-8 w-16" /> : stats.activeTasks}
+                        </div>
                         <p className="text-xs text-muted-foreground">Scheduled for automation</p>
                     </CardContent>
                 </Card>
@@ -130,7 +108,9 @@ const DashboardPage = () => {
                         <Activity className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.executedToday}</div>
+                        <div className="text-2xl font-bold">
+                            {isLoading ? <Skeleton className="h-8 w-16" /> : stats.executedToday}
+                        </div>
                         <p className="text-xs text-muted-foreground">Actions performed so far</p>
                     </CardContent>
                 </Card>
@@ -144,7 +124,19 @@ const DashboardPage = () => {
                         <CardDescription>Tasks scheduled for the next 24 hours</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {upcomingTasks.length > 0 ? (
+                        {isLoading ? (
+                            <div className="space-y-6">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="flex items-center justify-between">
+                                        <div className="space-y-2">
+                                            <Skeleton className="h-4 w-32" />
+                                            <Skeleton className="h-3 w-48" />
+                                        </div>
+                                        <Skeleton className="h-6 w-24 rounded" />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : upcomingTasks.length > 0 ? (
                             <div className="space-y-6">
                                 {upcomingTasks.map((task) => (
                                     <div key={task._id} className="flex items-center justify-between">
@@ -180,12 +172,24 @@ const DashboardPage = () => {
                         <CardDescription>Latest execution logs</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        {recentLogs.length > 0 ? (
+                        {isLoading ? (
+                            <div className="space-y-6">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="flex items-start gap-4">
+                                        <Skeleton className="h-2 w-2 rounded-full shrink-0" />
+                                        <div className="grid gap-2 flex-1">
+                                            <Skeleton className="h-4 w-3/4" />
+                                            <Skeleton className="h-3 w-1/2" />
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : recentLogs.length > 0 ? (
                             <div className="space-y-6">
                                 {recentLogs.map((log) => (
                                     <div key={log._id} className="flex items-start gap-4">
                                         <div className={`mt-0.5 h-2 w-2 rounded-full shrink-0 ${log.status === 'sent' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' :
-                                                log.status === 'failed' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-gray-400'
+                                            log.status === 'failed' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-gray-400'
                                             }`} />
                                         <div className="grid gap-1">
                                             <p className="text-sm font-medium leading-none">
@@ -201,7 +205,7 @@ const DashboardPage = () => {
                                     </div>
                                 ))}
                                 <Button variant="ghost" className="w-full text-xs" asChild>
-                                    <Link to="/activity">View all activity <ArrowRight className="ml-2 h-3 w-3" /></Link>
+                                    <Link to="/settings">View all activity <ArrowRight className="ml-2 h-3 w-3" /></Link>
                                 </Button>
                             </div>
                         ) : (
@@ -213,7 +217,7 @@ const DashboardPage = () => {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </PageTransition>
     );
 };
 

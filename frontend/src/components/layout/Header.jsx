@@ -54,9 +54,6 @@ const Header = () => {
                     <h1 className="text-lg font-semibold truncate">{breadcrumb || 'Dashboard'}</h1>
                 </div>
                 <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" className="text-muted-foreground">
-                        <Bell className="h-5 w-5" />
-                    </Button>
                     <div className="flex items-center gap-2">
                         <div className="flex flex-col items-end hidden md:flex">
                             <span className="text-sm font-medium">{user?.email?.split('@')[0]}</span>
