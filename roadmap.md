@@ -936,48 +936,195 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
   - Use a test Telegram account
   - Full flow: register → login → connect TG → create task → verify execution
 
-#### 8.3 — VPS Deployment
-- [ ] Server setup:
-  - Ubuntu VPS with SSH access
-  - Install Python 3.11+, Node.js 18+
-  - Install Nginx as reverse proxy
-  - Install Certbot for SSL (Let's Encrypt)
-- [ ] Backend deployment:
-  - Create `systemd` service for the Python backend:
-    ```ini
-    [Unit]
-    Description=Telegram Automation Platform Backend
-    After=network.target
-    
-    [Service]
-    User=appuser
-    WorkingDirectory=/opt/tg-platform/backend
-    EnvironmentFile=/opt/tg-platform/.env
-    ExecStart=/opt/tg-platform/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
-    Restart=always
-    RestartSec=5
-    
-    [Install]
-    WantedBy=multi-user.target
+#### 8.3 — VPS Deployment (Shared VPS via PM2 + Nginx)
+
+> **Context**: This project is deployed on a VPS (`62.72.42.124`) that already hosts a client's Node.js/React app (`fortunate-business` × 4 cluster instances on port 3000) with **Nginx + PM2**. The client is non-technical and does not access the VPS. We piggyback on the same stack — PM2 for process management, Nginx for reverse proxy. We do **not** have Namecheap access for the client's domain (`businessupdate.org`), so we use a **free DuckDNS subdomain**.
+
+> **VPS Audit Results** (completed):
+> | Resource | Status |
+> |----------|--------|
+> | **Disk** | 63 GB free of 72 GB (14% used) ✅ |
+> | **RAM** | 6.5 GB free of 8 GB ✅ |
+> | **Python** | 3.12.3 already installed ✅ |
+> | **Ports in use** | 22 (SSH), 80/443 (Nginx), 3000 (client PM2), 27017 (client MongoDB) |
+> | **Ports available** | 8000 (for our backend) ✅ |
+> | **PM2** | `fortunate-business` × 4 cluster + `pm2-logrotate` |
+> | **Nginx** | `/etc/nginx/sites-enabled/businessupdate.org` |
+> | **User** | `ashrafee` with `sudo` access |
+
+- [x] **Pre-deployment checks** — ✅ completed (see audit table above)
+
+- [ ] **Domain setup** — free subdomain via [DuckDNS](https://www.duckdns.org/):
+  - Go to `https://www.duckdns.org/` → sign in with Google/GitHub
+  - Create a free subdomain, e.g. `tg-auto.duckdns.org`
+  - Point it to VPS IP: `62.72.42.124`
+  - DuckDNS is free, no expiry, supports Let's Encrypt SSL
+  - **Alternative**: Access via direct IP `http://62.72.42.124:8080` (simpler but no SSL)
+
+- [ ] **Install Python venv package**:
+  ```bash
+  sudo apt install python3-venv -y
+  ```
+
+- [ ] **Project directory structure** — `/var/www/tg-platform/`:
+  ```
+  /var/www/tg-platform/
+  ├── backend/                    # Python FastAPI backend
+  │   ├── app/
+  │   ├── requirements.txt
+  │   └── .env
+  ├── frontend/
+  │   └── dist/                   # React production build
+  ├── venv/                       # Python virtual environment
+  ├── sessions/                   # Encrypted Telegram sessions
+  ├── uploads/                    # Media uploads
+  └── logs/                       # Application logs
+  ```
+  ```bash
+  sudo mkdir -p /var/www/tg-platform/{backend,frontend,sessions,uploads,logs}
+  sudo chown -R ashrafee:ashrafee /var/www/tg-platform
+  ```
+
+- [ ] **Python virtual environment setup**:
+  ```bash
+  cd /var/www/tg-platform
+  python3 -m venv venv
+  source venv/bin/activate
+  cd backend
+  pip install -r requirements.txt
+  ```
+
+- [ ] **Backend deployment via PM2**:
+  - Create PM2 ecosystem file at `/var/www/tg-platform/ecosystem.config.js`:
+    ```js
+    module.exports = {
+      apps: [
+        {
+          name: "tg-backend",
+          cwd: "/var/www/tg-platform/backend",
+          script: "/var/www/tg-platform/venv/bin/uvicorn",
+          args: "app.main:app --host 127.0.0.1 --port 8000",
+          interpreter: "none",            // uvicorn is the binary itself
+          env: {
+            // loaded from .env by the app, but you can also set here:
+            PATH: "/var/www/tg-platform/venv/bin:" + process.env.PATH,
+          },
+          max_restarts: 10,
+          restart_delay: 5000,
+          error_file: "/var/www/tg-platform/logs/backend-error.log",
+          out_file: "/var/www/tg-platform/logs/backend-out.log",
+          log_date_format: "YYYY-MM-DD HH:mm:ss Z",
+        },
+      ],
+    };
     ```
-  - Auto-restart on crash
-  - Log rotation with `journald`
-- [ ] Frontend deployment:
-  - Build production bundle: `npm run build`
-  - Serve via Nginx static file serving
-- [ ] Nginx configuration:
-  - Proxy `/api/*` to Python backend (port 8000)
-  - Serve frontend static files from `/`
-  - SSL termination with Let's Encrypt
-  - Gzip compression
-  - File upload size limits
-- [ ] Domain setup:
-  - Point domain/subdomain to VPS IP
-  - SSL certificate via Certbot
-- [ ] Monitoring:
-  - Set up basic uptime monitoring (UptimeRobot or similar)
-  - Log aggregation (journald or simple file logging)
-  - Alert on consecutive task failures (optional: Telegram bot notification to admin)
+  - Start: `pm2 start ecosystem.config.js`
+  - Save PM2 process list: `pm2 save`
+  - Verify: `pm2 list` — should show `tg-backend` alongside the client's `fortunate-business` processes
+
+- [ ] **Frontend deployment**:
+  - Build production bundle locally: `npm run build`
+  - Upload `dist/` to VPS: `scp -r dist/ ashrafee@62.72.42.124:/var/www/tg-platform/frontend/dist/`
+  - Nginx serves it as static files (see below)
+
+- [ ] **Nginx configuration** — new server block for the subdomain:
+  - Create `/etc/nginx/sites-available/tg-auto.duckdns.org`:
+    ```nginx
+    server {
+        listen 80;
+        server_name tg-auto.duckdns.org;
+
+        # Frontend — static files
+        root /var/www/tg-platform/frontend/dist;
+        index index.html;
+
+        # SPA routing
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Backend API proxy
+        location /api/ {
+            proxy_pass http://127.0.0.1:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_cache_bypass $http_upgrade;
+            client_max_body_size 50M;
+        }
+
+        # Gzip compression
+        gzip on;
+        gzip_types text/plain text/css application/json application/javascript text/xml;
+
+        # Block search engine crawling
+        location /robots.txt {
+            return 200 "User-agent: *\nDisallow: /\n";
+        }
+
+        access_log /var/www/tg-platform/logs/nginx-access.log;
+        error_log /var/www/tg-platform/logs/nginx-error.log;
+    }
+    ```
+  - Enable the site:
+    ```bash
+    sudo ln -s /etc/nginx/sites-available/tg-auto.duckdns.org /etc/nginx/sites-enabled/
+    sudo nginx -t
+    sudo systemctl reload nginx
+    ```
+
+- [ ] **SSL certificate** (Let's Encrypt via Certbot):
+  ```bash
+  sudo certbot --nginx -d tg-auto.duckdns.org
+  ```
+  - Certbot auto-modifies the Nginx config to add SSL directives
+  - Auto-renewal is handled by Certbot's systemd timer
+  - Result: `https://tg-auto.duckdns.org` with valid SSL ✓
+
+- [ ] **Deployment script** — create `/var/www/tg-platform/deploy.sh`:
+  ```bash
+  #!/bin/bash
+  echo "🚀 Deploying Telegram Platform..."
+
+  # Backend
+  cd /var/www/tg-platform/backend
+  git pull origin main
+  source /var/www/tg-platform/venv/bin/activate
+  pip install -r requirements.txt
+  pm2 restart tg-backend
+  echo "✅ Backend deployed"
+
+  # Frontend (upload dist/ first via scp, then just reload nginx)
+  sudo systemctl reload nginx
+  echo "✅ Frontend deployed"
+
+  pm2 status
+  echo "🎉 Deployment complete!"
+  ```
+  ```bash
+  chmod +x /var/www/tg-platform/deploy.sh
+  ```
+
+- [ ] **Useful PM2 commands**:
+  | Command | Purpose |
+  |---------|---------|
+  | `pm2 list` | See all running processes |
+  | `pm2 logs tg-backend` | Tail backend logs |
+  | `pm2 restart tg-backend` | Restart after code changes |
+  | `pm2 stop tg-backend` | Stop the backend |
+  | `pm2 delete tg-backend` | Remove from PM2 |
+  | `pm2 monit` | Real-time resource monitor |
+
+- [ ] **Monitoring**:
+  - UptimeRobot: ping `https://tg-auto.duckdns.org/api/v1/health` (free tier)
+  - PM2: built-in auto-restart on crash + logs
+  - Telegram bot notification to admin on task failures (built into Phase 7)
+  - Log rotation: `pm2-logrotate` already installed on VPS ✓
+  - **MongoDB**: Uses MongoDB Atlas (cloud) — separate from client's local MongoDB on port 27017
 
 ---
 
