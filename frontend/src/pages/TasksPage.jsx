@@ -24,7 +24,13 @@ import {
 } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
 import { SkeletonCard } from '../components/ui/skeleton';
-import { Select } from '../components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../components/ui/select';
 
 const ACTION_ICONS = {
     send_sticker: Sticker,
@@ -142,26 +148,34 @@ const TasksPage = () => {
                 </div>
                 <Select
                     value={filterStatus}
-                    onChange={e => setFilterStatus(e.target.value)}
-                    className="w-full sm:w-[150px]"
+                    onValueChange={setFilterStatus}
                 >
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="paused">Paused</option>
-                    <option value="error">Error</option>
+                    <SelectTrigger className="w-full sm:w-[150px]">
+                        <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="paused">Paused</SelectItem>
+                        <SelectItem value="error">Error</SelectItem>
+                    </SelectContent>
                 </Select>
                 <Select
                     value={filterAction}
-                    onChange={e => setFilterAction(e.target.value)}
-                    className="w-full sm:w-[150px]"
+                    onValueChange={setFilterAction}
                 >
-                    <option value="">All Actions</option>
-                    <option value="send_sticker">Sticker</option>
-                    <option value="send_text">Text</option>
-                    <option value="send_photo">Photo</option>
-                    <option value="send_video">Video</option>
-                    <option value="send_document">Document</option>
-                    <option value="forward_message">Forward</option>
+                    <SelectTrigger className="w-full sm:w-[150px]">
+                        <SelectValue placeholder="All Actions" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Actions</SelectItem>
+                        <SelectItem value="send_sticker">Sticker</SelectItem>
+                        <SelectItem value="send_text">Text</SelectItem>
+                        <SelectItem value="send_photo">Photo</SelectItem>
+                        <SelectItem value="send_video">Video</SelectItem>
+                        <SelectItem value="send_document">Document</SelectItem>
+                        <SelectItem value="forward_message">Forward</SelectItem>
+                    </SelectContent>
                 </Select>
             </div>
 

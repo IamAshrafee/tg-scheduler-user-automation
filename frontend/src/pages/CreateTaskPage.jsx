@@ -3,6 +3,17 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../components/ui/select';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import { Switch } from '../components/ui/switch';
+import { Label } from '../components/ui/Label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import {
     ArrowLeft,
@@ -392,16 +403,16 @@ const CreateTaskPage = () => {
             case 'send_text':
                 return (
                     <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">Enter the text message to send.</p>
-                        <textarea
+                        <Label className="text-sm font-medium">Message Text</Label>
+                        <Textarea
                             value={form.action_content.text || ''}
                             onChange={e => updateForm('action_content', { ...form.action_content, text: e.target.value })}
                             placeholder="Type your message here..."
                             rows={6}
-                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                            className="resize-none"
                         />
                         <div className="flex gap-3">
-                            <label className="text-xs text-muted-foreground">Parse Mode:</label>
+                            <Label className="text-xs text-muted-foreground pt-1">Parse Mode:</Label>
                             {['none', 'markdown', 'html'].map(mode => (
                                 <button
                                     key={mode}
@@ -484,10 +495,10 @@ const CreateTaskPage = () => {
             case 'send_document':
                 return (
                     <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">
+                        <Label className="text-sm font-medium">
                             Upload a {form.action_type.replace('send_', '')} file (max 50MB).
-                        </p>
-                        <div className="flex flex-col items-center gap-3 p-8 border-2 border-dashed border-border rounded-lg">
+                        </Label>
+                        <div className="flex flex-col items-center gap-3 p-8 border-2 border-dashed border-border rounded-lg bg-muted/10">
                             {form.action_content.file_path ? (
                                 <div className="text-center">
                                     <Check className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
@@ -499,22 +510,24 @@ const CreateTaskPage = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <input
+                                    <Input
                                         type="file"
                                         onChange={e => {
                                             if (e.target.files[0]) handleFileUpload(e.target.files[0]);
                                         }}
-                                        className="text-sm"
+                                        className="max-w-xs"
                                     />
                                 </>
                             )}
                         </div>
-                        <input
-                            value={form.action_content.caption || ''}
-                            onChange={e => updateForm('action_content', { ...form.action_content, caption: e.target.value })}
-                            placeholder="Optional caption..."
-                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                        />
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Caption (Optional)</Label>
+                            <Input
+                                value={form.action_content.caption || ''}
+                                onChange={e => updateForm('action_content', { ...form.action_content, caption: e.target.value })}
+                                placeholder="Optional caption..."
+                            />
+                        </div>
                     </div>
                 );
 
@@ -524,23 +537,21 @@ const CreateTaskPage = () => {
                         <p className="text-sm text-muted-foreground">Enter the source chat and message to forward.</p>
                         <div className="space-y-3">
                             <div>
-                                <label className="text-xs font-medium mb-1 block">Source Chat ID</label>
-                                <input
+                                <Label className="text-xs font-medium mb-1 block">Source Chat ID</Label>
+                                <Input
                                     type="number"
                                     value={form.action_content.source_chat_id || ''}
                                     onChange={e => updateForm('action_content', { ...form.action_content, source_chat_id: parseInt(e.target.value) || 0 })}
                                     placeholder="Enter chat ID..."
-                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-medium mb-1 block">Message ID</label>
-                                <input
+                                <Label className="text-xs font-medium mb-1 block">Message ID</Label>
+                                <Input
                                     type="number"
                                     value={form.action_content.source_message_id || ''}
                                     onChange={e => updateForm('action_content', { ...form.action_content, source_message_id: parseInt(e.target.value) || 0 })}
                                     placeholder="Enter message ID..."
-                                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                 />
                             </div>
                         </div>
@@ -558,7 +569,7 @@ const CreateTaskPage = () => {
 
             {/* Schedule Type */}
             <div className="space-y-2">
-                <label className="text-xs font-medium">Schedule Type</label>
+                <Label className="text-xs font-medium">Schedule Type</Label>
                 <div className="grid gap-2 sm:grid-cols-2">
                     {SCHEDULE_TYPES.map(st => (
                         <button
@@ -579,39 +590,43 @@ const CreateTaskPage = () => {
             {/* Time */}
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-xs font-medium mb-1 block">Time</label>
-                    <input
+                    <Label className="text-xs font-medium mb-1 block">Time</Label>
+                    <Input
                         type="time"
                         value={form.schedule.time}
                         onChange={e => updateNested('schedule', 'time', e.target.value)}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="text-lg py-2 h-12"
                     />
                 </div>
                 <div>
-                    <label className="text-xs font-medium mb-1 block">Timezone</label>
-                    <select
+                    <Label className="text-xs font-medium mb-1 block">Timezone</Label>
+                    <Select
                         value={form.schedule.timezone || user?.timezone || 'UTC'}
-                        onChange={e => updateNested('schedule', 'timezone', e.target.value)}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        onValueChange={value => updateNested('schedule', 'timezone', value)}
                     >
-                        <option value="UTC">UTC</option>
-                        <option value="Asia/Dhaka">Asia/Dhaka (GMT+6)</option>
-                        <option value="Asia/Kolkata">Asia/Kolkata (GMT+5:30)</option>
-                        <option value="America/New_York">America/New_York (EST)</option>
-                        <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
-                        <option value="Europe/London">Europe/London (GMT)</option>
-                        <option value="Europe/Berlin">Europe/Berlin (CET)</option>
-                        <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
-                        <option value="Asia/Dubai">Asia/Dubai (GST)</option>
-                        <option value="Australia/Sydney">Australia/Sydney (AEDT)</option>
-                    </select>
+                        <SelectTrigger className="w-full h-12">
+                            <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="UTC">UTC</SelectItem>
+                            <SelectItem value="Asia/Dhaka">Asia/Dhaka (GMT+6)</SelectItem>
+                            <SelectItem value="Asia/Kolkata">Asia/Kolkata (GMT+5:30)</SelectItem>
+                            <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
+                            <SelectItem value="America/Los_Angeles">America/Los_Angeles (PST)</SelectItem>
+                            <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
+                            <SelectItem value="Europe/Berlin">Europe/Berlin (CET)</SelectItem>
+                            <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
+                            <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
+                            <SelectItem value="Australia/Sydney">Australia/Sydney (AEDT)</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
             {/* Weekly days */}
             {(form.schedule.type === 'weekly' || form.schedule.type === 'custom_days') && (
                 <div>
-                    <label className="text-xs font-medium mb-2 block">Days of Week</label>
+                    <Label className="text-xs font-medium mb-2 block">Days of Week</Label>
                     <div className="flex gap-2 flex-wrap">
                         {DAY_NAMES.map((day, idx) => (
                             <button
@@ -636,7 +651,7 @@ const CreateTaskPage = () => {
             {/* Monthly days */}
             {form.schedule.type === 'monthly' && (
                 <div>
-                    <label className="text-xs font-medium mb-2 block">Days of Month</label>
+                    <Label className="text-xs font-medium mb-2 block">Days of Month</Label>
                     <div className="flex gap-1.5 flex-wrap">
                         {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
                             <button
@@ -661,8 +676,8 @@ const CreateTaskPage = () => {
             {/* Specific dates */}
             {form.schedule.type === 'specific_dates' && (
                 <div>
-                    <label className="text-xs font-medium mb-1 block">Specific Dates</label>
-                    <input
+                    <Label className="text-xs font-medium mb-1 block">Specific Dates</Label>
+                    <Input
                         type="date"
                         onChange={e => {
                             if (e.target.value) {
@@ -672,7 +687,6 @@ const CreateTaskPage = () => {
                                 }
                             }
                         }}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     />
                     {(form.schedule.specific_dates || []).length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
@@ -689,7 +703,7 @@ const CreateTaskPage = () => {
 
             {/* Random delay */}
             <div>
-                <label className="text-xs font-medium mb-1 block">Random Delay (anti-ban): {form.schedule.random_delay_minutes} min</label>
+                <Label className="text-xs font-medium mb-1 block">Random Delay (anti-ban): {form.schedule.random_delay_minutes} min</Label>
                 <input
                     type="range"
                     min="0"
@@ -710,20 +724,18 @@ const CreateTaskPage = () => {
             {/* Simulate Typing */}
             <div className="flex items-center justify-between p-4 rounded-lg border">
                 <div>
-                    <p className="text-sm font-medium">Simulate Typing</p>
+                    <Label className="text-sm font-medium">Simulate Typing</Label>
                     <p className="text-xs text-muted-foreground">Show "typing..." indicator before sending (more human-like)</p>
                 </div>
-                <button
-                    onClick={() => updateForm('simulate_typing', !form.simulate_typing)}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${form.simulate_typing ? 'bg-primary' : 'bg-muted'}`}
-                >
-                    <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform shadow ${form.simulate_typing ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
+                <Switch
+                    checked={form.simulate_typing}
+                    onCheckedChange={(checked) => updateForm('simulate_typing', checked)}
+                />
             </div>
 
             {/* Skip Weekly Days */}
             <div>
-                <label className="text-xs font-medium mb-2 block">Skip Days (task won't run on these days)</label>
+                <Label className="text-xs font-medium mb-2 block">Skip Days (task won't run on these days)</Label>
                 <div className="flex gap-2 flex-wrap">
                     {DAY_NAMES.map((day, idx) => (
                         <button
@@ -746,8 +758,8 @@ const CreateTaskPage = () => {
 
             {/* Skip Specific Dates */}
             <div>
-                <label className="text-xs font-medium mb-1 block">Skip Specific Dates</label>
-                <input
+                <Label className="text-xs font-medium mb-1 block">Skip Specific Dates</Label>
+                <Input
                     type="date"
                     onChange={e => {
                         if (e.target.value) {
@@ -757,7 +769,6 @@ const CreateTaskPage = () => {
                             }
                         }
                     }}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
                 {(form.skip_days.specific_dates || []).length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -781,21 +792,19 @@ const CreateTaskPage = () => {
 
                 {/* Task name */}
                 <div>
-                    <label className="text-xs font-medium mb-1 block">Task Name *</label>
-                    <input
+                    <Label className="text-xs font-medium mb-1 block">Task Name *</Label>
+                    <Input
                         value={form.name}
                         onChange={e => updateForm('name', e.target.value)}
                         placeholder="e.g., Morning Attendance, Daily Post..."
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     />
                 </div>
                 <div>
-                    <label className="text-xs font-medium mb-1 block">Description (optional)</label>
-                    <input
+                    <Label className="text-xs font-medium mb-1 block">Description (optional)</Label>
+                    <Input
                         value={form.description}
                         onChange={e => updateForm('description', e.target.value)}
                         placeholder="Brief description..."
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     />
                 </div>
 

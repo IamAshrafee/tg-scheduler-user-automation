@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../../components/ui/select';
 import { Card, CardContent } from '../../components/ui/card';
 import {
     Loader2,
@@ -56,24 +64,28 @@ const AdminTasksPage = () => {
 
             <div className="flex gap-3 flex-wrap">
                 <div className="relative flex-1 min-w-[200px] max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <input
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                    <Input
                         type="text"
                         placeholder="Search by task name..."
                         value={search}
                         onChange={e => { setSearch(e.target.value); setPage(0); }}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent pl-9 pr-3 py-1 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="pl-9"
                     />
                 </div>
-                <select
+                <Select
                     value={statusFilter}
-                    onChange={e => { setStatusFilter(e.target.value); setPage(0); }}
-                    className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+                    onValueChange={(val) => { setStatusFilter(val === "all" ? "" : val); setPage(0); }}
                 >
-                    <option value="">All Status</option>
-                    <option value="active">Active</option>
-                    <option value="paused">Paused</option>
-                </select>
+                    <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="paused">Paused</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
 
             <Card>

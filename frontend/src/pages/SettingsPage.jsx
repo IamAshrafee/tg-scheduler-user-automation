@@ -26,7 +26,13 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import PageTransition from '../components/common/PageTransition';
-import { Select } from '../components/ui/select';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../components/ui/select';
 import { Skeleton } from '../components/ui/skeleton';
 
 const TIMEZONE_OPTIONS = [
@@ -152,15 +158,19 @@ const GeneralTab = ({ user, logout }) => {
                     <CardDescription>Used as the default timezone for new tasks</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    <select
+                    <Select
                         value={timezone}
-                        onChange={e => setTimezone(e.target.value)}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        onValueChange={setTimezone}
                     >
-                        {TIMEZONE_OPTIONS.map(tz => (
-                            <option key={tz.value} value={tz.value}>{tz.label}</option>
-                        ))}
-                    </select>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {TIMEZONE_OPTIONS.map(tz => (
+                                <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     <div className="flex items-center gap-3">
                         <Button size="sm" onClick={handleSaveTimezone} disabled={isSavingTz}>
                             {isSavingTz ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Save className="mr-2 h-3 w-3" />}
@@ -478,13 +488,17 @@ const ActivityLogTab = () => {
             <div className="flex justify-end">
                 <Select
                     value={filterStatus}
-                    onChange={e => { setFilterStatus(e.target.value); setPage(0); }}
-                    className="w-auto min-w-[140px]"
+                    onValueChange={val => { setFilterStatus(val === "all" ? "" : val); setPage(0); }}
                 >
-                    <option value="">All Status</option>
-                    <option value="sent">Sent</option>
-                    <option value="failed">Failed</option>
-                    <option value="skipped">Skipped</option>
+                    <SelectTrigger className="w-auto min-w-[140px]">
+                        <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="sent">Sent</SelectItem>
+                        <SelectItem value="failed">Failed</SelectItem>
+                        <SelectItem value="skipped">Skipped</SelectItem>
+                    </SelectContent>
                 </Select>
             </div>
 

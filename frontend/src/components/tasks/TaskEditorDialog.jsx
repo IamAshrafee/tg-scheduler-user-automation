@@ -3,6 +3,17 @@ import { useState, useEffect } from 'react';
 import Modal from '../ui/modal';
 import { Button } from '../ui/button';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '../ui/select';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
+import { Switch } from '../ui/switch';
+import { Label } from '../ui/label';
+import {
     Loader2,
     Check,
     Sticker,
@@ -135,12 +146,12 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
             case 'send_text':
                 return (
                     <div className="space-y-4">
-                        <textarea
+                        <Textarea
                             value={form.action_content.text || ''}
                             onChange={e => updateForm('action_content', { ...form.action_content, text: e.target.value })}
                             placeholder="Type your message here..."
                             rows={6}
-                            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                            className="resize-none"
                         />
                         <div className="flex gap-3">
                             <span className="text-xs text-muted-foreground pt-1">Parse Mode:</span>
@@ -226,14 +237,13 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                                     <Button variant="outline" size="sm" className="mt-2" onClick={() => updateForm('action_content', { ...form.action_content, file_path: null })}>Replace</Button>
                                 </div>
                             ) : (
-                                <input type="file" onChange={e => e.target.files[0] && handleFileUpload(e.target.files[0])} className="text-sm" />
+                                <Input type="file" onChange={e => e.target.files[0] && handleFileUpload(e.target.files[0])} className="text-sm file:text-foreground" />
                             )}
                         </div>
-                        <input
+                        <Input
                             value={form.action_content.caption || ''}
                             onChange={e => updateForm('action_content', { ...form.action_content, caption: e.target.value })}
                             placeholder="Optional caption..."
-                            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         />
                     </div>
                 );
@@ -242,21 +252,19 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                 return (
                     <div className="space-y-3">
                         <div>
-                            <label className="text-xs font-medium mb-1 block">Source Chat ID</label>
-                            <input
+                            <Label className="text-xs font-medium mb-1 block">Source Chat ID</Label>
+                            <Input
                                 type="number"
                                 value={form.action_content.source_chat_id || ''}
                                 onChange={e => updateForm('action_content', { ...form.action_content, source_chat_id: parseInt(e.target.value) || 0 })}
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-medium mb-1 block">Message ID</label>
-                            <input
+                            <Label className="text-xs font-medium mb-1 block">Message ID</Label>
+                            <Input
                                 type="number"
                                 value={form.action_content.source_message_id || ''}
                                 onChange={e => updateForm('action_content', { ...form.action_content, source_message_id: parseInt(e.target.value) || 0 })}
-                                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                             />
                         </div>
                     </div>
@@ -268,7 +276,7 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
     const renderScheduleTab = () => (
         <div className="space-y-5">
             <div className="space-y-2">
-                <label className="text-xs font-medium">Schedule Type</label>
+                <Label className="text-xs font-medium">Schedule Type</Label>
                 <div className="grid gap-2 sm:grid-cols-2">
                     {SCHEDULE_TYPES.map(st => (
                         <button
@@ -288,33 +296,36 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
 
             <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label className="text-xs font-medium mb-1 block">Time</label>
-                    <input
+                    <Label className="text-xs font-medium mb-1 block">Time</Label>
+                    <Input
                         type="time"
                         value={form.schedule.time}
                         onChange={e => updateNested('schedule', 'time', e.target.value)}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     />
                 </div>
                 <div>
-                    <label className="text-xs font-medium mb-1 block">Timezone</label>
-                    <select
+                    <Label className="text-xs font-medium mb-1 block">Timezone</Label>
+                    <Select
                         value={form.schedule.timezone || 'UTC'}
-                        onChange={e => updateNested('schedule', 'timezone', e.target.value)}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        onValueChange={value => updateNested('schedule', 'timezone', value)}
                     >
-                        <option value="UTC">UTC</option>
-                        <option value="Asia/Dhaka">Asia/Dhaka (GMT+6)</option>
-                        <option value="Asia/Kolkata">Asia/Kolkata (GMT+5:30)</option>
-                        <option value="America/New_York">America/New_York (EST)</option>
-                        <option value="Europe/London">Europe/London (GMT)</option>
-                    </select>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select timezone" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="UTC">UTC</SelectItem>
+                            <SelectItem value="Asia/Dhaka">Asia/Dhaka (GMT+6)</SelectItem>
+                            <SelectItem value="Asia/Kolkata">Asia/Kolkata (GMT+5:30)</SelectItem>
+                            <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
+                            <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 
             {(form.schedule.type === 'weekly' || form.schedule.type === 'custom_days') && (
                 <div>
-                    <label className="text-xs font-medium mb-2 block">Days of Week</label>
+                    <Label className="text-xs font-medium mb-2 block">Days of Week</Label>
                     <div className="flex gap-2 flex-wrap">
                         {DAY_NAMES.map((day, idx) => (
                             <button
@@ -339,7 +350,7 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
             {/* Monthly days */}
             {form.schedule.type === 'monthly' && (
                 <div>
-                    <label className="text-xs font-medium mb-2 block">Days of Month</label>
+                    <Label className="text-xs font-medium mb-2 block">Days of Month</Label>
                     <div className="flex gap-1.5 flex-wrap">
                         {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
                             <button
@@ -364,8 +375,8 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
             {/* Specific dates */}
             {form.schedule.type === 'specific_dates' && (
                 <div>
-                    <label className="text-xs font-medium mb-1 block">Specific Dates</label>
-                    <input
+                    <Label className="text-xs font-medium mb-1 block">Specific Dates</Label>
+                    <Input
                         type="date"
                         onChange={e => {
                             if (e.target.value) {
@@ -375,7 +386,6 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                                 }
                             }
                         }}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     />
                     {(form.schedule.specific_dates || []).length > 0 && (
                         <div className="flex flex-wrap gap-2 mt-2">
@@ -391,8 +401,8 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
             )}
 
             <div>
-                <label className="text-xs font-medium mb-1 block">Random Delay: {form.schedule.random_delay_minutes} min</label>
-                <input
+                <Label className="text-xs font-medium mb-1 block">Random Delay: {form.schedule.random_delay_minutes} min</Label>
+                <Input
                     type="range" min="0" max="15"
                     value={form.schedule.random_delay_minutes}
                     onChange={e => updateNested('schedule', 'random_delay_minutes', parseInt(e.target.value))}
@@ -410,15 +420,13 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                     <p className="text-sm font-medium">Simulate Typing</p>
                     <p className="text-xs text-muted-foreground">Show "typing..." indicator before sending</p>
                 </div>
-                <button
-                    onClick={() => updateForm('simulate_typing', !form.simulate_typing)}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${form.simulate_typing ? 'bg-primary' : 'bg-muted'}`}
-                >
-                    <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white transition-transform shadow ${form.simulate_typing ? 'translate-x-5' : 'translate-x-0'}`} />
-                </button>
+                <Switch
+                    checked={form.simulate_typing}
+                    onCheckedChange={(checked) => updateForm('simulate_typing', checked)}
+                />
             </div>
             <div>
-                <label className="text-xs font-medium mb-2 block">Skip Days (Safe Mode)</label>
+                <Label className="text-xs font-medium mb-2 block">Skip Days (Safe Mode)</Label>
                 <div className="flex gap-2 flex-wrap">
                     {DAY_NAMES.map((day, idx) => (
                         <button
@@ -441,8 +449,8 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
 
             {/* Skip Specific Dates */}
             <div>
-                <label className="text-xs font-medium mb-1 block">Skip Specific Dates</label>
-                <input
+                <Label className="text-xs font-medium mb-1 block">Skip Specific Dates</Label>
+                <Input
                     type="date"
                     onChange={e => {
                         if (e.target.value) {
@@ -452,7 +460,6 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                             }
                         }
                     }}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
                 {(form.skip_days.specific_dates || []).length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -482,8 +489,8 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === tab
-                                    ? 'bg-background shadow text-foreground'
-                                    : 'text-muted-foreground hover:text-foreground'
+                                ? 'bg-background shadow text-foreground'
+                                : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
                             {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -495,23 +502,21 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                     {activeTab === 'general' && (
                         <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
                             <div>
-                                <label className="text-sm font-medium mb-1 block">Task Name</label>
-                                <input
+                                <Label className="text-sm font-medium mb-1 block">Task Name</Label>
+                                <Input
                                     value={form.name}
                                     onChange={e => updateForm('name', e.target.value)}
-                                    className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                 />
                             </div>
                             <div>
-                                <label className="text-sm font-medium mb-1 block">Description</label>
-                                <input
+                                <Label className="text-sm font-medium mb-1 block">Description</Label>
+                                <Input
                                     value={form.description}
                                     onChange={e => updateForm('description', e.target.value)}
-                                    className="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                 />
                             </div>
                             <div className="pt-4">
-                                <label className="text-sm font-medium mb-2 block">Action Type</label>
+                                <Label className="text-sm font-medium mb-2 block">Action Type</Label>
                                 <div className="grid grid-cols-2 gap-2">
                                     {ACTION_TYPES.map(type => (
                                         <button
