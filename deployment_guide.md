@@ -10,16 +10,16 @@
 
 | Component | Location |
 |-----------|----------|
-| Project root | `/var/www/tg-platform/` |
-| Backend (FastAPI) | `/var/www/tg-platform/backend/` |
-| Frontend (React) | `/var/www/tg-platform/frontend/dist/` |
-| Python venv | `/var/www/tg-platform/venv/` |
-| Sessions (encrypted) | `/var/www/tg-platform/sessions/` |
-| Uploads | `/var/www/tg-platform/uploads/` |
-| Logs | `/var/www/tg-platform/logs/` |
-| PM2 config | `/var/www/tg-platform/ecosystem.config.js` |
+| Project root | `/var/www/tg-scheduler-user-automation/` |
+| Backend (FastAPI) | `/var/www/tg-scheduler-user-automation/backend/` |
+| Frontend (React) | `/var/www/tg-scheduler-user-automation/frontend/dist/` |
+| Python venv | `/var/www/tg-scheduler-user-automation/venv/` |
+| Sessions (encrypted) | `/var/www/tg-scheduler-user-automation/sessions/` |
+| Uploads | `/var/www/tg-scheduler-user-automation/uploads/` |
+| Logs | `/var/www/tg-scheduler-user-automation/logs/` |
+| PM2 config | `/var/www/tg-scheduler-user-automation/ecosystem.config.js` |
 | Nginx config | `/etc/nginx/sites-available/tg-auto-schedular.giize.com` |
-| Backend `.env` | `/var/www/tg-platform/backend/.env` |
+| Backend `.env` | `/var/www/tg-scheduler-user-automation/backend/.env` |
 
 ---
 
@@ -46,8 +46,8 @@ ssh ashrafee@62.72.42.124
 sudo apt install python3-venv -y
 
 # Create project directories
-sudo mkdir -p /var/www/tg-platform/{backend,frontend,sessions,uploads,logs}
-sudo chown -R ashrafee:ashrafee /var/www/tg-platform
+sudo mkdir -p /var/www/tg-scheduler-user-automation/{backend,frontend,sessions,uploads,logs}
+sudo chown -R ashrafee:ashrafee /var/www/tg-scheduler-user-automation
 ```
 
 ---
@@ -58,11 +58,11 @@ Run these from your **local machine** (Windows cmd/PowerShell):
 
 ```bash
 # Upload backend
-scp -r backend/ ashrafee@62.72.42.124:/var/www/tg-platform/backend/
+scp -r backend/ ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/backend/
 
 # Upload deploy configs
-scp deploy/ecosystem.config.js ashrafee@62.72.42.124:/var/www/tg-platform/
-scp deploy/.env.production ashrafee@62.72.42.124:/var/www/tg-platform/backend/.env
+scp deploy/ecosystem.config.js ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/
+scp deploy/.env.production ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/backend/.env
 ```
 
 > ⚠️ **Don't upload** `venv/`, `__pycache__/`, `sessions/`, or your local `.env`.
@@ -74,7 +74,7 @@ scp deploy/.env.production ashrafee@62.72.42.124:/var/www/tg-platform/backend/.e
 ```bash
 ssh ashrafee@62.72.42.124
 
-cd /var/www/tg-platform
+cd /var/www/tg-scheduler-user-automation
 python3 -m venv venv
 source venv/bin/activate
 
@@ -89,7 +89,7 @@ pip install -r requirements.txt
 Edit the `.env` file with your real values:
 
 ```bash
-nano /var/www/tg-platform/backend/.env
+nano /var/www/tg-scheduler-user-automation/backend/.env
 ```
 
 Critical values to set:
@@ -107,7 +107,7 @@ CORS_ORIGINS=["https://tg-auto-schedular.giize.com"]
 Generate the `ENCRYPTION_KEY`:
 
 ```bash
-/var/www/tg-platform/venv/bin/python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+/var/www/tg-scheduler-user-automation/venv/bin/python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
 Generate the `JWT_SECRET`:
@@ -121,7 +121,7 @@ openssl rand -hex 32
 ## Step 6 — Start Backend with PM2
 
 ```bash
-cd /var/www/tg-platform
+cd /var/www/tg-scheduler-user-automation
 
 # Start the backend
 pm2 start ecosystem.config.js
@@ -159,7 +159,7 @@ npm run build
 Upload the build to VPS:
 
 ```bash
-scp -r dist/ ashrafee@62.72.42.124:/var/www/tg-platform/frontend/dist/
+scp -r dist/ ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/frontend/dist/
 ```
 
 ---
@@ -170,7 +170,7 @@ On the **VPS**:
 
 ```bash
 # Copy the Nginx config
-sudo cp /var/www/tg-platform/nginx-tg-auto.conf /etc/nginx/sites-available/tg-auto-schedular.giize.com
+sudo cp /var/www/tg-scheduler-user-automation/nginx-tg-auto.conf /etc/nginx/sites-available/tg-auto-schedular.giize.com
 
 # Or create it manually:
 sudo nano /etc/nginx/sites-available/tg-auto-schedular.giize.com
@@ -184,7 +184,7 @@ server {
     server_name tg-auto-schedular.giize.com;
 
     # Frontend
-    root /var/www/tg-platform/frontend/dist;
+    root /var/www/tg-scheduler-user-automation/frontend/dist;
     index index.html;
 
     location / {
@@ -212,8 +212,8 @@ server {
         return 200 "User-agent: *\nDisallow: /\n";
     }
 
-    access_log /var/www/tg-platform/logs/nginx-access.log;
-    error_log /var/www/tg-platform/logs/nginx-error.log;
+    access_log /var/www/tg-scheduler-user-automation/logs/nginx-access.log;
+    error_log /var/www/tg-scheduler-user-automation/logs/nginx-error.log;
 }
 ```
 
@@ -262,11 +262,11 @@ After code changes, upload and restart:
 
 ```bash
 # Upload updated backend
-scp -r backend/ ashrafee@62.72.42.124:/var/www/tg-platform/backend/
+scp -r backend/ ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/backend/
 
 # On VPS:
 ssh ashrafee@62.72.42.124
-cd /var/www/tg-platform
+cd /var/www/tg-scheduler-user-automation
 source venv/bin/activate
 cd backend && pip install -r requirements.txt
 pm2 restart tg-backend
@@ -279,7 +279,7 @@ For frontend changes:
 cd frontend && npm run build
 
 # Upload
-scp -r dist/ ashrafee@62.72.42.124:/var/www/tg-platform/frontend/dist/
+scp -r dist/ ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/frontend/dist/
 
 # On VPS:
 sudo systemctl reload nginx
@@ -288,8 +288,8 @@ sudo systemctl reload nginx
 Or use the deploy script (must be on VPS):
 
 ```bash
-chmod +x /var/www/tg-platform/deploy.sh
-/var/www/tg-platform/deploy.sh
+chmod +x /var/www/tg-scheduler-user-automation/deploy.sh
+/var/www/tg-scheduler-user-automation/deploy.sh
 ```
 
 ### PM2 Commands
@@ -318,8 +318,8 @@ chmod +x /var/www/tg-platform/deploy.sh
 pm2 logs tg-backend
 
 # Nginx logs
-tail -f /var/www/tg-platform/logs/nginx-access.log
-tail -f /var/www/tg-platform/logs/nginx-error.log
+tail -f /var/www/tg-scheduler-user-automation/logs/nginx-access.log
+tail -f /var/www/tg-scheduler-user-automation/logs/nginx-error.log
 ```
 
 ---

@@ -966,9 +966,9 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
   sudo apt install python3-venv -y
   ```
 
-- [ ] **Project directory structure** — `/var/www/tg-platform/`:
+- [ ] **Project directory structure** — `/var/www/tg-scheduler-user-automation/`:
   ```
-  /var/www/tg-platform/
+  /var/www/tg-scheduler-user-automation/
   ├── backend/                    # Python FastAPI backend
   │   ├── app/
   │   ├── requirements.txt
@@ -981,13 +981,13 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
   └── logs/                       # Application logs
   ```
   ```bash
-  sudo mkdir -p /var/www/tg-platform/{backend,frontend,sessions,uploads,logs}
-  sudo chown -R ashrafee:ashrafee /var/www/tg-platform
+  sudo mkdir -p /var/www/tg-scheduler-user-automation/{backend,frontend,sessions,uploads,logs}
+  sudo chown -R ashrafee:ashrafee /var/www/tg-scheduler-user-automation
   ```
 
 - [ ] **Python virtual environment setup**:
   ```bash
-  cd /var/www/tg-platform
+  cd /var/www/tg-scheduler-user-automation
   python3 -m venv venv
   source venv/bin/activate
   cd backend
@@ -995,24 +995,24 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
   ```
 
 - [ ] **Backend deployment via PM2**:
-  - Create PM2 ecosystem file at `/var/www/tg-platform/ecosystem.config.js`:
+  - Create PM2 ecosystem file at `/var/www/tg-scheduler-user-automation/ecosystem.config.js`:
     ```js
     module.exports = {
       apps: [
         {
           name: "tg-backend",
-          cwd: "/var/www/tg-platform/backend",
-          script: "/var/www/tg-platform/venv/bin/uvicorn",
+          cwd: "/var/www/tg-scheduler-user-automation/backend",
+          script: "/var/www/tg-scheduler-user-automation/venv/bin/uvicorn",
           args: "app.main:app --host 127.0.0.1 --port 8000",
           interpreter: "none",            // uvicorn is the binary itself
           env: {
             // loaded from .env by the app, but you can also set here:
-            PATH: "/var/www/tg-platform/venv/bin:" + process.env.PATH,
+            PATH: "/var/www/tg-scheduler-user-automation/venv/bin:" + process.env.PATH,
           },
           max_restarts: 10,
           restart_delay: 5000,
-          error_file: "/var/www/tg-platform/logs/backend-error.log",
-          out_file: "/var/www/tg-platform/logs/backend-out.log",
+          error_file: "/var/www/tg-scheduler-user-automation/logs/backend-error.log",
+          out_file: "/var/www/tg-scheduler-user-automation/logs/backend-out.log",
           log_date_format: "YYYY-MM-DD HH:mm:ss Z",
         },
       ],
@@ -1024,7 +1024,7 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
 
 - [ ] **Frontend deployment**:
   - Build production bundle locally: `npm run build`
-  - Upload `dist/` to VPS: `scp -r dist/ ashrafee@62.72.42.124:/var/www/tg-platform/frontend/dist/`
+  - Upload `dist/` to VPS: `scp -r dist/ ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/frontend/dist/`
   - Nginx serves it as static files (see below)
 
 - [ ] **Nginx configuration** — new server block for the subdomain:
@@ -1035,7 +1035,7 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
         server_name tg-auto-schedular.giize.com;
 
         # Frontend — static files
-        root /var/www/tg-platform/frontend/dist;
+        root /var/www/tg-scheduler-user-automation/frontend/dist;
         index index.html;
 
         # SPA routing
@@ -1066,8 +1066,8 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
             return 200 "User-agent: *\nDisallow: /\n";
         }
 
-        access_log /var/www/tg-platform/logs/nginx-access.log;
-        error_log /var/www/tg-platform/logs/nginx-error.log;
+        access_log /var/www/tg-scheduler-user-automation/logs/nginx-access.log;
+        error_log /var/www/tg-scheduler-user-automation/logs/nginx-error.log;
     }
     ```
   - Enable the site:
@@ -1085,15 +1085,15 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
   - Auto-renewal is handled by Certbot's systemd timer
   - Result: `https://tg-auto-schedular.giize.com` with valid SSL ✓
 
-- [ ] **Deployment script** — create `/var/www/tg-platform/deploy.sh`:
+- [ ] **Deployment script** — create `/var/www/tg-scheduler-user-automation/deploy.sh`:
   ```bash
   #!/bin/bash
   echo "🚀 Deploying Telegram Platform..."
 
   # Backend
-  cd /var/www/tg-platform/backend
+  cd /var/www/tg-scheduler-user-automation/backend
   git pull origin main
-  source /var/www/tg-platform/venv/bin/activate
+  source /var/www/tg-scheduler-user-automation/venv/bin/activate
   pip install -r requirements.txt
   pm2 restart tg-backend
   echo "✅ Backend deployed"
@@ -1106,7 +1106,7 @@ The platform is live on a VPS, accessible via a domain, running 24/7 with proper
   echo "🎉 Deployment complete!"
   ```
   ```bash
-  chmod +x /var/www/tg-platform/deploy.sh
+  chmod +x /var/www/tg-scheduler-user-automation/deploy.sh
   ```
 
 - [ ] **Useful PM2 commands**:

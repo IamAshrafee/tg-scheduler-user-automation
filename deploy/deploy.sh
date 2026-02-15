@@ -4,7 +4,7 @@ set -e
 echo "🚀 Deploying Telegram Automation Platform..."
 echo "============================================="
 
-PROJECT_DIR="/var/www/tg-platform"
+PROJECT_DIR="/var/www/tg-scheduler-user-automation"
 
 # ─── Backend ───
 echo ""
@@ -21,7 +21,7 @@ echo "✅ Backend restarted"
 # ─── Frontend ───
 echo ""
 echo "🌐 Frontend: upload dist/ manually via SCP first, then run this script."
-echo "   scp -r frontend/dist/ ashrafee@62.72.42.124:/var/www/tg-platform/frontend/dist/"
+echo "   scp -r frontend/dist/ ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/frontend/dist/"
 sudo systemctl reload nginx
 echo "✅ Nginx reloaded"
 
