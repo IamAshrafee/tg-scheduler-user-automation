@@ -1,5 +1,6 @@
+import logging
 from typing import Annotated, List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from bson import ObjectId
 
 from app.models.user import User
@@ -9,10 +10,12 @@ from app.models.telegram_account import (
     TelegramAccountResponse,
 )
 from app.middleware.deps import get_current_active_user
+from app.middleware.rate_limiter import limiter
 from app.services.telegram_account_service import telegram_account_service
 from app.services.telegram_client_manager import telegram_client_manager
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/", response_model=List[TelegramAccountResponse])
@@ -23,7 +26,9 @@ async def list_accounts(current_user: Annotated[User, Depends(get_current_active
 
 
 @router.post("/send-code")
+@limiter.limit("3/10minutes")
 async def send_code(
+    request: Request,
     req: SendCodeRequest,
     current_user: Annotated[User, Depends(get_current_active_user)],
 ):
@@ -50,9 +55,10 @@ async def send_code(
         result = await telegram_client_manager.send_code(req.phone_number)
         return result
     except Exception as e:
+        logger.exception("send_code failed for user %s", current_user.id)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail="Failed to send verification code. Please try again later.",
         )
 
 
@@ -69,9 +75,23 @@ async def verify_code(
             password=req.password,
         )
     except Exception as e:
+        error_msg = str(e)
+        # Preserve user-actionable messages, mask unknown errors
+        safe_messages = [
+            "Login session expired",
+            "Two-factor authentication",
+            "Invalid verification code",
+            "Verification code has expired",
+            "Invalid 2FA password",
+        ]
+        if any(msg in error_msg for msg in safe_messages):
+            detail = error_msg
+        else:
+            logger.exception("verify_code failed for user %s", current_user.id)
+            detail = "Failed to verify code. Please try again."
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail=detail,
         )
 
     # Save account to database
@@ -168,7 +188,8 @@ async def get_groups(
         groups = await telegram_client_manager.get_groups(account_id)
         return {"groups": groups}
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        logger.exception("get_groups failed for account %s", account_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch groups from Telegram.")
 
 
 @router.get("/{account_id}/sticker-sets")
@@ -187,7 +208,8 @@ async def get_sticker_sets(
         sticker_sets = await telegram_client_manager.get_sticker_sets(account_id)
         return {"sticker_sets": sticker_sets}
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        logger.exception("get_sticker_sets failed for account %s", account_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch sticker sets from Telegram.")
 
 
 @router.get("/{account_id}/sticker-sets/{set_short_name}/stickers")
@@ -207,4 +229,5 @@ async def get_stickers_in_set(
         stickers = await telegram_client_manager.get_stickers_in_set(account_id, set_short_name)
         return {"stickers": stickers}
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        logger.exception("get_stickers_in_set failed for account %s", account_id)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch stickers from Telegram.")

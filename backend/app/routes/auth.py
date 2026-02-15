@@ -1,12 +1,13 @@
 from datetime import timedelta
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 
 from app.models.user import User, UserCreate
 from app.services.user_service import user_service
 from app.utils.security import verify_password, create_access_token
 from app.middleware.deps import get_current_active_user
+from app.middleware.rate_limiter import limiter
 from app.config import get_settings
 
 router = APIRouter()
@@ -21,7 +22,8 @@ class LoginRequest(BaseModel):
     password: str
 
 @router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED)
-async def register(user_in: UserCreate):
+@limiter.limit("3/hour")
+async def register(request: Request, user_in: UserCreate):
     """
     Register a new user.
     """
@@ -34,7 +36,8 @@ async def register(user_in: UserCreate):
     return user
 
 @router.post("/login", response_model=Token)
-async def login(login_data: LoginRequest):
+@limiter.limit("5/15minutes")
+async def login(request: Request, login_data: LoginRequest):
     """
     Login with email and password to get JWT token.
     """

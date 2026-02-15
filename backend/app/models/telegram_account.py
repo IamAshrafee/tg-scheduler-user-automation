@@ -1,7 +1,8 @@
+import re
 from datetime import datetime
 from typing import Optional
 from typing_extensions import Annotated
-from pydantic import BaseModel, Field, BeforeValidator
+from pydantic import BaseModel, Field, BeforeValidator, field_validator
 from bson import ObjectId
 
 PyObjectId = Annotated[str, BeforeValidator(str)]
@@ -39,11 +40,37 @@ class TelegramAccount(TelegramAccountInDB):
 class SendCodeRequest(BaseModel):
     phone_number: str = Field(..., description="Phone number with country code, e.g. +8801XXXXXXXXX")
 
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        v = v.strip().replace(" ", "").replace("-", "")
+        if not v.startswith("+"):
+            raise ValueError("Phone number must start with + (country code)")
+        digits = v[1:]
+        if not digits.isdigit():
+            raise ValueError("Phone number must contain only digits after +")
+        if not (8 <= len(digits) <= 15):
+            raise ValueError("Phone number must be 8-15 digits (excluding +)")
+        return v
+
 
 class VerifyCodeRequest(BaseModel):
     phone_number: str
     code: str
     password: Optional[str] = Field(None, description="2FA password if enabled")
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, v: str) -> str:
+        v = v.strip().replace(" ", "").replace("-", "")
+        if not v.startswith("+"):
+            raise ValueError("Phone number must start with + (country code)")
+        digits = v[1:]
+        if not digits.isdigit():
+            raise ValueError("Phone number must contain only digits after +")
+        if not (8 <= len(digits) <= 15):
+            raise ValueError("Phone number must be 8-15 digits (excluding +)")
+        return v
 
 
 class TelegramAccountResponse(BaseModel):

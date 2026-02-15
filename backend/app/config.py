@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     TELEGRAM_API_HASH: str
     
     # CORS
-    CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS: list[str] = ["http://localhost:5173"]
     
     # Admin
     ADMIN_EMAIL: str = "admin@example.com"
