@@ -146,7 +146,7 @@ export default function TemplateInstantiationDialog({ isOpen, onClose, template,
         setLoading(true);
         setError(null);
         try {
-            const res = await api.post(`/templates/${template.id}/instantiate`, {
+            const res = await api.post(`/templates/${template._id}/instantiate`, {
                 telegram_account_id: selectedAccount,
                 target_chat_id: selectedGroup.id,
                 target_chat_title: selectedGroup.title,
