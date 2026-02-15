@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import TemplateInstantiationDialog from '../components/templates/TemplateInstantiationDialog';
 import {
     Loader2,
-    ArrowRight,
     Sparkles,
     Briefcase,
     Megaphone,
@@ -24,7 +24,8 @@ const TemplatesPage = () => {
     const navigate = useNavigate();
     const [templates, setTemplates] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [applyingId, setApplyingId] = useState(null);
+    const [selectedTemplate, setSelectedTemplate] = useState(null);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
         const fetchTemplates = async () => {
@@ -40,21 +41,9 @@ const TemplatesPage = () => {
         fetchTemplates();
     }, []);
 
-    const handleApply = async (templateId) => {
-        setApplyingId(templateId);
-        try {
-            const res = await api.post(`/templates/${templateId}/apply`);
-            // Navigate to create page with template data as state
-            navigate('/tasks/create', {
-                state: {
-                    template: res.data,
-                }
-            });
-        } catch (e) {
-            console.error('Failed to apply template:', e);
-        } finally {
-            setApplyingId(null);
-        }
+    const handleApply = (template) => {
+        setSelectedTemplate(template);
+        setIsDialogOpen(true);
     };
 
     if (isLoading) {
@@ -81,7 +70,6 @@ const TemplatesPage = () => {
                     {templates.map(template => {
                         const cat = CATEGORY_CONFIG[template.category] || CATEGORY_CONFIG.work;
                         const CatIcon = cat.icon;
-                        const isApplying = applyingId === template._id;
 
                         return (
                             <Card key={template._id} className="group hover:shadow-lg transition-all duration-300 hover:border-primary/20 overflow-hidden">
@@ -128,14 +116,9 @@ const TemplatesPage = () => {
                                     <Button
                                         className="w-full gap-2"
                                         size="sm"
-                                        onClick={() => handleApply(template._id)}
-                                        disabled={isApplying}
+                                        onClick={() => handleApply(template)}
                                     >
-                                        {isApplying ? (
-                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        ) : (
-                                            <Sparkles className="h-3.5 w-3.5" />
-                                        )}
+                                        <Sparkles className="h-3.5 w-3.5" />
                                         Use Template
                                     </Button>
                                 </CardContent>
@@ -154,6 +137,13 @@ const TemplatesPage = () => {
                     </p>
                 </div>
             )}
+
+            <TemplateInstantiationDialog
+                isOpen={isDialogOpen}
+                onClose={() => setIsDialogOpen(false)}
+                template={selectedTemplate}
+                onSuccess={() => navigate('/tasks')}
+            />
         </div>
     );
 };

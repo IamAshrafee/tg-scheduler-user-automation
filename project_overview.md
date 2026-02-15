@@ -166,16 +166,18 @@ Users can define:
 
 On skip days, the task does not execute.
 
-### 6. Template System
+### 6. Template System (Advanced Batch Engine)
 
-Ready-made templates for common use cases:
+The system moves beyond simple "copy-paste" templates to a sophisticated **Batch Instantiation Engine**.
 
-- **Office Attendance** — 4 pre-configured tasks for duty in/out, break
-- **Daily Motivation Post** — one daily message at set time
-- **Channel Promotion** — scheduled content posts
-- **Study Reminder** — recurring personal reminder
+- **Structural Blueprints**: Templates define the *structure* of a workflow (e.g., "Send 4 messages at specific times") without imposing specific content.
+- **Batch Identity**: When a template is used, all created tasks are linked by a unique `batch_id`. This allows the system to understand that these 4 tasks "belong together" as a single logic unit (e.g., "Daily Attendance Routine").
+- **Deep Customization (The "White-Glove" Experience)**: 
+  - Unlike standard templates that just copy data, our engine pauses before creation to let the user customize *every single aspect*.
+  - Users can override the Schedule (e.g., change "Daily" to "Mon-Wed-Fri"), Time, Content, and even Anti-Ban settings for *each individual task* in the batch.
+- **Smart Defaults**: The system pre-fills intelligent defaults (e.g., "09:00 AM" for Duty In) but allows full override.
 
-User selects a template → edits time/content → saves. Dramatically improves UX.
+This turns a rigid "template" into a flexible "starting point" for powerful automation.
 
 ### 7. Background Automation Engine
 
@@ -289,7 +291,6 @@ Each task card shows:
 - Status (active / paused / failed)
 
 **"Create New Task"** button opens a step-by-step flow:
-
 1. Select Telegram account
 2. Select target group/channel
 3. Select action type (sticker / text / photo / video / document / forward)
@@ -309,17 +310,35 @@ Users can also:
 
 ---
 
-### Templates Page
+### Templates Page (The "Use Template" Wizard)
 
-Browse available templates:
+Browse available templates with rich previews (icon, description, task count).
+When a user selects "Use Template", they enter a **3-Step Advanced Wizard**:
 
-- Office Attendance (4 tasks pre-configured)
-- Daily Motivation Post
-- Channel Promotion
-- Study Reminder
-- Custom (create from scratch)
+#### Step 1: Account Selection
+- Choose which connected Telegram account will execute this batch of tasks.
+- If only one account exists, this step is auto-skipped for speed.
 
-User selects template → system pre-fills task configuration → user customizes → saves.
+#### Step 2: Target Selection
+- Choose the **Target Audience** (Group or Channel).
+- The system lists all available dialogs from the selected account.
+
+#### Step 3: Advanced Batch Customization
+This is the core of the power-user experience. The user sees a list of all tasks in the template and can:
+
+1.  **Review the Batch**: See exactly what will be created (e.g., "Duty In", "Break Start", "Break End", "Duty Out").
+2.  **Edit Individual Tasks**: Click "Edit" on any task to open the full **Task Editor Dialog**.
+    - **Schedule**: Change from "Daily" to "Monthly" (e.g., "1st of every month") or "Specific Dates".
+    - **Time**: Adjust the default time (e.g., change 09:00 to 09:30).
+    - **Content**: Upload a photo, select a sticker, or write a custom message.
+    - **Options**: Enable "Simulate Typing" or add "Skip Specific Dates" (e.g., skip a holiday).
+3.  **Toggle Tasks**: Uncheck any task to exclude it from the batch (e.g., "I don't need a Break End task").
+
+#### Step 4: Batch Instantiation
+- Clicking "Create Tasks" sends the entire configuration to the backend.
+- The backend generates a unique `batch_id`.
+- All tasks are created transactionally.
+- The user is redirected to the Tasks List, where they can see their new batch.
 
 ---
 
@@ -518,6 +537,30 @@ Use:
 - Conditional logic (if X then send Y)
 - Analytics dashboard (send success rates, activity trends)
 - Mobile app wrapper
+
+---
+
+## Developer Extensibility (Adding New Templates)
+
+The system is designed to be easily extensible by developers. New "Built-in Templates" can be added without writing migration scripts or complex DB operations.
+
+### How it Works
+1.  **Code-Based Definition**: Templates are defined as Python dictionaries in `backend/app/models/template.py` under `BUILT_IN_TEMPLATES`.
+2.  **Auto-Seeding**: On server startup, the system checks if these templates exist in the database. If not, it creates them automatically.
+3.  **Structural Integrity**: Developers define the *Task Configuration* (Action Type, Schedule Type, Default Time) but leave the *Content* blank.
+
+### Example Template Structure
+```python
+{
+    "name": "Weekend Vibes",
+    "tasks": [
+        { "name": "Saturday Morning", "action_type": "send_sticker", "schedule_type": "weekly", "default_time": "10:00" },
+        { "name": "Sunday Evening", "action_type": "send_text", "schedule_type": "weekly", "default_time": "18:00" }
+    ]
+}
+```
+
+Refer to the comprehensive `template_creation_guide.md` in the project root for full documentation on adding new templates, supported action types, and limitations.
 
 ---
 

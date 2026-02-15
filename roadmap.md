@@ -1196,3 +1196,81 @@ gantt
 6. **The Result section** tells you what "done" looks like for each phase
 
 > 🎯 **End Goal**: A production-deployed **Telegram Automation Platform** where users connect their accounts once, create tasks once, and the system handles all Telegram automation — attendance, messages, media, reminders, anything — automatically, forever.
+
+---
+
+## Phase 8 — Security, Optimization & Deployment
+
+### Purpose
+Prepare the application for production by hardening security, optimizing performance, and setting up deployment scripts.
+
+### Result
+Production-ready application with rate limiting, input sanitization, error masking, and comprehensive deployment artifacts (PM2, Nginx, Docker).
+
+### Tasks
+#### 8.1 — Security Hardening
+- [x] Implement API Rate Limiting (`slowapi`)
+- [x] Restrict CORS to specific origins
+- [x] Global Error Handler (hide stack traces in prod)
+- [x] Input Sanitization (Pydantic validators for phone numbers)
+- [x] File Upload Validation (MIME types, extensions)
+
+#### 8.2 — Performance Optimization
+- [x] Application Profiling (Middleware to log slow requests)
+- [x] Database Indexing (Ensure all collections have proper indexes)
+
+#### 8.3 — Deployment Packaging
+- [x] Create `ecosystem.config.js` for PM2
+- [x] Create Nginx configuration `deploy/nginx-tg-auto.conf`
+- [x] Create `deployment_guide.md`
+
+---
+
+## Phase 9 — Scalable Template Engine (Batch Editor)
+
+### Purpose
+Enable bulk creation of tasks from templates with overrides. Support "Batch grouping" so users can manage related tasks together.
+
+### Result
+Backend supports instantiating templates with full customization (schedule, limits, overrides). Frontend "Use Template" wizard flows correctly.
+
+### Tasks
+#### 9.1 — Backend Engine
+- [x] Update `TemplateTaskOverride` model (added `schedule`, `simulate_typing`, `skip_days`)
+- [x] Implement `instantiate_template` endpoint with batch ID generation
+- [x] Validate task limits before batch creation
+
+#### 9.2 — Frontend Integration
+- [x] Create `TemplateInstantiationDialog` (Wizard Step 1: Account, Step 2: Target)
+- [x] Implement "Batch Task Config" in Step 3
+
+---
+
+## Phase 10 — Advanced Template Customization
+
+### Purpose
+Achieve feature parity between the "Create Task" wizard and the "Use Template" wizard. Allow users to fully customize *every* aspect of a template task before creation.
+
+### Result
+Users can edit Schedule (Monthly, Specific Dates), Options (Skip Dates), and Content for each task within a template.
+
+### Tasks
+#### 10.1 — Task Editor Dialog
+- [x] Create `TaskEditorDialog` component
+- [x] Implement Schedule types: Daily, Weekly, Monthly (1-31), Specific Dates
+- [x] Implement Options: Skip Specific Dates, Simulate Typing
+- [x] Integrate `TaskEditorDialog` into Template Wizard
+
+---
+
+## Phase 11 — Developer Documentation
+
+### Purpose
+Document how developers can add new "Built-in Templates" to the system, as there is no admin UI for this yet.
+
+### Result
+Comprehensive `template_creation_guide.md` created.
+
+### Tasks
+- [x] Create `template_creation_guide.md` documenting `backend/app/models/template.py` structure.
+

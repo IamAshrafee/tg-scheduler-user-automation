@@ -74,6 +74,7 @@ class TaskCreate(BaseModel):
     simulate_typing: bool = False
     skip_days: SkipDays = SkipDays()
     template_id: Optional[str] = None
+    batch_id: Optional[str] = None
 
 
 class TaskUpdate(BaseModel):
@@ -85,6 +86,7 @@ class TaskUpdate(BaseModel):
     schedule: Optional[TaskSchedule] = None
     simulate_typing: Optional[bool] = None
     skip_days: Optional[SkipDays] = None
+    batch_id: Optional[str] = None
 
 
 # --- DB Model ---
@@ -109,6 +111,7 @@ class TaskInDB(BaseModel):
     last_execution: Optional[datetime] = None
     next_execution: Optional[datetime] = None
     template_id: Optional[str] = None
+    batch_id: Optional[str] = None
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
