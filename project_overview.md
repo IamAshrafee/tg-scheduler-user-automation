@@ -239,6 +239,12 @@ The main landing page after login shows:
 
 > **Design Note**: The sidebar is intentionally lean (5 items) to support a mobile bottom navigation bar. Activity Logs and Off Days are accessible as tabs within the Settings page.
 
+**Mobile Navigation:**
+- A fixed **bottom navigation bar** (Home, Accounts, Tasks, Templates, Settings) appears on screens below `md` breakpoint.
+- The desktop sidebar is hidden on mobile — the bottom bar replaces it entirely.
+- **Admin users** see a hamburger icon (☰) in the mobile header that opens a **slide-out drawer** with admin-only pages (Admin Dashboard, Users, TG Accounts, All Tasks, System).
+- A **Logout button** is available in Settings → General tab for all users on mobile.
+
 ---
 
 ### Telegram Accounts Page

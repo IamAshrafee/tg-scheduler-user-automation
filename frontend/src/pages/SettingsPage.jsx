@@ -22,6 +22,7 @@ import {
     ChevronRight,
     Settings,
     Info,
+    LogOut,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -53,7 +54,7 @@ const TABS = [
 ];
 
 // ─── General Tab ─────────────────────────────────────────────────────
-const GeneralTab = ({ user }) => {
+const GeneralTab = ({ user, logout }) => {
     const [timezone, setTimezone] = useState(user?.timezone || 'UTC');
     const [isSavingTz, setIsSavingTz] = useState(false);
     const [tzSaved, setTzSaved] = useState(false);
@@ -223,6 +224,22 @@ const GeneralTab = ({ user }) => {
                             Change Password
                         </Button>
                     </form>
+                </CardContent>
+            </Card>
+
+            {/* Logout */}
+            <Card className="border-red-500/20">
+                <CardContent className="pt-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm font-medium">Sign Out</p>
+                            <p className="text-xs text-muted-foreground">Log out of your account</p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={logout} className="text-red-500 border-red-500/30 hover:bg-red-500/10 hover:text-red-500">
+                            <LogOut className="mr-2 h-3.5 w-3.5" />
+                            Logout
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
         </div>
@@ -556,7 +573,7 @@ const ActivityLogTab = () => {
 
 // ─── Main Settings Page ──────────────────────────────────────────────
 const SettingsPage = () => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('general');
 
     return (
@@ -589,7 +606,7 @@ const SettingsPage = () => {
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'general' && <GeneralTab user={user} />}
+            {activeTab === 'general' && <GeneralTab user={user} logout={logout} />}
             {activeTab === 'off-days' && <OffDaysTab />}
             {activeTab === 'activity' && <ActivityLogTab />}
         </div>

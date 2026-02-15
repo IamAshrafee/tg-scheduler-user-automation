@@ -1292,3 +1292,25 @@ Settings page now has 3 tabs: **General** (profile, timezone, password), **Off D
 - [x] Delete `OffDaysPage.jsx` and `ActivityLogsPage.jsx`
 - [x] Update `project_overview.md` to reflect new navigation structure
 
+---
+
+## Phase 13 — Mobile Bottom Navigation & Admin Drawer
+
+### Purpose
+Add proper mobile navigation since the desktop sidebar is hidden on small screens. Normal users get a bottom nav bar; admin users additionally get a hamburger menu that opens a slide-out drawer with admin-only pages.
+
+### Result
+- Fixed bottom navigation bar with 5 items (Home, Accounts, Tasks, Templates, Settings) — visible only on mobile (`md:hidden`), with active state highlighting and backdrop blur.
+- Admin-only hamburger icon in the mobile header that opens a dark slide-out drawer with 5 admin nav items, user info, and logout button.
+- Logout button added to Settings → General tab so all users (including non-admin) can log out on mobile.
+- Main content gets `pb-20` on mobile to prevent overlap with the bottom nav.
+
+### Tasks
+- [x] Create `MobileBottomNav.jsx` — fixed bottom bar with 5 nav icons
+- [x] Update `AppLayout.jsx` — include bottom nav + mobile padding
+- [x] Add admin hamburger menu to `Header.jsx` (mobile only)
+- [x] Add slide-out drawer with admin nav items, user info, and logout
+- [x] Fix drawer overlapping bottom nav bar (`h-[calc(100%-4rem)]`)
+- [x] Add logout button to `SettingsPage.jsx` General tab for all users
+
+
