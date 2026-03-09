@@ -124,6 +124,13 @@ class TaskService:
         data["created_at"] = datetime.utcnow()
         data["updated_at"] = datetime.utcnow()
 
+        # Auto-fill active_month/active_year for monthly-only tasks
+        if data.get("skip_days", {}).get("this_month_only"):
+            tz = pytz.timezone(schedule_tz)
+            now = datetime.now(tz)
+            data["skip_days"]["active_month"] = now.month
+            data["skip_days"]["active_year"] = now.year
+
         result = await self.collection.insert_one(data)
         return await self.get_by_id(str(result.inserted_id))
 
@@ -171,18 +178,30 @@ class TaskService:
         
         # Recalculate next_execution when re-enabling
         next_exec = None
+        update_fields = {}
         if new_enabled:
             schedule_dict = task.schedule.model_dump()
             next_exec = calculate_next_execution(schedule_dict, schedule_dict.get("timezone", "Asia/Dhaka"))
 
+            # Refresh active_month/year for monthly-only tasks on re-enable
+            if task.skip_days.this_month_only:
+                tz_str = schedule_dict.get("timezone", "Asia/Dhaka")
+                tz = pytz.timezone(tz_str)
+                now = datetime.now(tz)
+                update_fields["skip_days.active_month"] = now.month
+                update_fields["skip_days.active_year"] = now.year
+                update_fields["skip_days.monthly_skip_days"] = []  # Clear for fresh month
+
+        update_fields.update({
+            "is_enabled": new_enabled,
+            "status": new_status,
+            "next_execution": next_exec,
+            "updated_at": datetime.utcnow(),
+        })
+
         doc = await self.collection.find_one_and_update(
             {"_id": oid},
-            {"$set": {
-                "is_enabled": new_enabled,
-                "status": new_status,
-                "next_execution": next_exec,
-                "updated_at": datetime.utcnow(),
-            }},
+            {"$set": update_fields},
             return_document=ReturnDocument.AFTER,
         )
         return Task(**doc) if doc else None
@@ -217,6 +236,22 @@ class TaskService:
         async for doc in cursor:
             tasks.append(Task(**doc))
         return tasks
+
+    async def expire_monthly_task(self, task_id: str):
+        """Auto-deactivate a monthly-only task when its month has ended."""
+        try:
+            oid = ObjectId(task_id)
+        except Exception:
+            return
+        await self.collection.update_one(
+            {"_id": oid},
+            {"$set": {
+                "is_enabled": False,
+                "status": "expired",
+                "next_execution": None,
+                "updated_at": datetime.utcnow(),
+            }}
+        )
 
 
 task_service = TaskService()

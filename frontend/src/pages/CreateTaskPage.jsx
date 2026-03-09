@@ -33,6 +33,7 @@ import {
     Clock,
     Calendar,
     Shield,
+    CalendarOff,
 } from 'lucide-react';
 
 const STEPS = [
@@ -102,7 +103,7 @@ const CreateTaskPage = () => {
             random_delay_minutes: 0,
         },
         simulate_typing: false,
-        skip_days: { weekly_holidays: [], specific_dates: [] },
+        skip_days: { weekly_holidays: [], specific_dates: [], this_month_only: false, monthly_skip_days: [] },
     });
 
     // Load accounts on mount
@@ -135,7 +136,12 @@ const CreateTaskPage = () => {
                     action_content: task.action_content || {},
                     schedule: { ...task.schedule, random_delay_minutes: task.schedule?.random_delay_minutes || 0 },
                     simulate_typing: task.simulate_typing || false,
-                    skip_days: task.skip_days || { weekly_holidays: [], specific_dates: [] },
+                    skip_days: {
+                        weekly_holidays: task.skip_days?.weekly_holidays || [],
+                        specific_dates: task.skip_days?.specific_dates || [],
+                        this_month_only: task.skip_days?.this_month_only || false,
+                        monthly_skip_days: task.skip_days?.monthly_skip_days || [],
+                    },
                 });
             } catch (e) {
                 setError('Failed to load task for editing');
@@ -781,6 +787,64 @@ const CreateTaskPage = () => {
                     </div>
                 )}
             </div>
+
+            {/* Only This Month */}
+            <div className="space-y-4 pt-2 border-t border-border">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-amber-500/20 bg-amber-500/5">
+                    <div className="flex items-start gap-3">
+                        <CalendarOff className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+                        <div>
+                            <Label className="text-sm font-medium">Only This Month</Label>
+                            <p className="text-xs text-muted-foreground">Task will auto-deactivate when the current month ends</p>
+                        </div>
+                    </div>
+                    <Switch
+                        checked={form.skip_days.this_month_only || false}
+                        onCheckedChange={(checked) => updateForm('skip_days', {
+                            ...form.skip_days,
+                            this_month_only: checked,
+                            monthly_skip_days: checked ? form.skip_days.monthly_skip_days || [] : [],
+                        })}
+                    />
+                </div>
+
+                {form.skip_days.this_month_only && (
+                    <div className="space-y-3">
+                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                📅 This task will only run during <strong>{new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</strong>.
+                                When the month ends, it will be automatically deactivated. Re-enable it next month to set new skip days.
+                            </p>
+                        </div>
+                        <div>
+                            <Label className="text-xs font-medium mb-2 block">Skip Days of Month (select days to skip this month)</Label>
+                            <div className="flex gap-1.5 flex-wrap">
+                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                    <button
+                                        key={day}
+                                        onClick={() => {
+                                            const days = form.skip_days.monthly_skip_days || [];
+                                            const newDays = days.includes(day) ? days.filter(d => d !== day) : [...days, day];
+                                            updateForm('skip_days', { ...form.skip_days, monthly_skip_days: newDays });
+                                        }}
+                                        className={`w-8 h-8 rounded border text-xs font-medium transition-all ${(form.skip_days.monthly_skip_days || []).includes(day)
+                                                ? 'border-amber-500 bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                                                : 'border-border hover:bg-muted'
+                                            }`}
+                                    >
+                                        {day}
+                                    </button>
+                                ))}
+                            </div>
+                            {(form.skip_days.monthly_skip_days || []).length > 0 && (
+                                <p className="text-[11px] text-muted-foreground mt-2">
+                                    Skipping {form.skip_days.monthly_skip_days.sort((a, b) => a - b).join(', ')} of this month
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 
@@ -836,6 +900,18 @@ const CreateTaskPage = () => {
                         <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Random delay</span>
                             <span className="font-medium">Up to {form.schedule.random_delay_minutes} min</span>
+                        </div>
+                    )}
+                    {form.skip_days.this_month_only && (
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Monthly mode</span>
+                            <span className="font-medium text-amber-500">Only this month</span>
+                        </div>
+                    )}
+                    {form.skip_days.this_month_only && (form.skip_days.monthly_skip_days || []).length > 0 && (
+                        <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Monthly skip days</span>
+                            <span className="font-medium">{form.skip_days.monthly_skip_days.sort((a, b) => a - b).join(', ')}</span>
                         </div>
                     )}
                 </div>

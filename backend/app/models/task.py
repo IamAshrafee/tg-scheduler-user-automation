@@ -57,6 +57,10 @@ class TaskSchedule(BaseModel):
 class SkipDays(BaseModel):
     weekly_holidays: List[int] = []  # 0=Monday, 6=Sunday
     specific_dates: List[str] = []  # ["2026-03-26"]
+    this_month_only: bool = False  # If true, task auto-deactivates at month end
+    monthly_skip_days: List[int] = []  # Day-of-month to skip, e.g. [5, 12, 20]
+    active_month: Optional[int] = None  # Month number (1-12) when activated
+    active_year: Optional[int] = None  # Year when activated
 
 
 # --- Create / Update ---

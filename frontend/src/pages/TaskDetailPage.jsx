@@ -22,6 +22,7 @@ import {
     Video,
     FileText,
     Forward,
+    CalendarOff,
 } from 'lucide-react';
 
 const ACTION_LABELS = {
@@ -143,9 +144,11 @@ const TaskDetailPage = () => {
                             <h1 className="text-2xl font-bold tracking-tight">{task.name}</h1>
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${task.is_enabled
                                 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                                : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                                : task.status === 'expired'
+                                    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                                    : 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
                                 }`}>
-                                {task.is_enabled ? 'Enabled' : 'Disabled'}
+                                {task.status === 'expired' ? 'Expired' : task.is_enabled ? 'Enabled' : 'Disabled'}
                             </span>
                         </div>
                         <p className="text-muted-foreground text-sm">{task.description || 'No description'}</p>
@@ -197,6 +200,18 @@ const TaskDetailPage = () => {
                                 <span className="text-emerald-500 font-medium">Active</span>
                             </div>
                         )}
+                        {task.skip_days?.this_month_only && (
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground flex items-center gap-1.5">
+                                    <CalendarOff className="h-3.5 w-3.5" /> Monthly Only
+                                </span>
+                                <span className="font-medium text-amber-500">
+                                    {task.skip_days.active_month && task.skip_days.active_year
+                                        ? new Date(task.skip_days.active_year, task.skip_days.active_month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })
+                                        : 'Active'}
+                                </span>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -240,7 +255,7 @@ const TaskDetailPage = () => {
             </div>
 
             {/* Skip Days */}
-            {((task.skip_days?.weekly_holidays?.length > 0) || (task.skip_days?.specific_dates?.length > 0)) && (
+            {((task.skip_days?.weekly_holidays?.length > 0) || (task.skip_days?.specific_dates?.length > 0) || (task.skip_days?.this_month_only && task.skip_days?.monthly_skip_days?.length > 0)) && (
                 <Card>
                     <CardHeader className="pb-3">
                         <CardTitle className="text-sm">Skip Days</CardTitle>
@@ -257,6 +272,18 @@ const TaskDetailPage = () => {
                                     {d}
                                 </span>
                             ))}
+                            {task.skip_days?.this_month_only && (task.skip_days.monthly_skip_days || []).length > 0 && (
+                                <>
+                                    <span className="text-xs px-2 py-1 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 font-medium">
+                                        Monthly skip:
+                                    </span>
+                                    {task.skip_days.monthly_skip_days.sort((a, b) => a - b).map(d => (
+                                        <span key={`m-${d}`} className="text-xs px-2 py-1 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                            {d}
+                                        </span>
+                                    ))}
+                                </>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

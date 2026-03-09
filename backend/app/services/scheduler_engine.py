@@ -147,6 +147,31 @@ class SchedulerEngine:
         if not task.is_enabled:
             return
 
+        # --- Pre-check 1b: Monthly-only expiry check ---
+        if task.skip_days.this_month_only and task.skip_days.active_month and task.skip_days.active_year:
+            tz_str = task.schedule.timezone or "Asia/Dhaka"
+            try:
+                tz = pytz.timezone(tz_str)
+            except Exception:
+                tz = pytz.timezone("Asia/Dhaka")
+            now = datetime.now(tz)
+            if now.month != task.skip_days.active_month or now.year != task.skip_days.active_year:
+                # Month has changed — auto-deactivate
+                await task_service.expire_monthly_task(str(task.id))
+                self.remove_job(str(task.id))
+                await activity_log_service.log(
+                    task_id=str(task.id),
+                    telegram_account_id=str(task.telegram_account_id),
+                    user_id=str(task.user_id),
+                    task_name=task.name,
+                    action_type=task.action_type,
+                    target_title=task.target.chat_title,
+                    status="skipped",
+                    reason="Monthly-only task expired (month ended)",
+                    scheduled_time=task.next_execution,
+                )
+                return
+
         # --- Pre-check 2: Is today an off day? ---
         if await self._is_off_day(task):
             await activity_log_service.log(
@@ -208,6 +233,10 @@ class SchedulerEngine:
         if today_weekday in task.skip_days.weekly_holidays:
             return True
         if today_str in task.skip_days.specific_dates:
+            return True
+
+        # Check monthly skip days (only-this-month feature)
+        if task.skip_days.this_month_only and now.day in task.skip_days.monthly_skip_days:
             return True
 
         # Check global off days

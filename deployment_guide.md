@@ -227,6 +227,26 @@ sudo systemctl reload nginx
 
 ---
 
+✅ Easiest Fix (logs folder missing)
+
+Just recreate the missing folder.
+
+Run this:
+
+sudo mkdir -p /var/www/tg-scheduler-user-automation/logs
+
+
+Now create empty log files:
+
+sudo touch /var/www/tg-scheduler-user-automation/logs/nginx-access.log
+sudo touch /var/www/tg-scheduler-user-automation/logs/nginx-error.log
+
+
+Now give permission:
+
+sudo chown -R www-data:www-data /var/www/tg-scheduler-user-automation/logs
+
+
 ## Step 9 — SSL Certificate (HTTPS)
 
 ```bash
