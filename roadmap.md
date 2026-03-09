@@ -1313,4 +1313,27 @@ Add proper mobile navigation since the desktop sidebar is hidden on small screen
 - [x] Fix drawer overlapping bottom nav bar (`h-[calc(100%-4rem)]`)
 - [x] Add logout button to `SettingsPage.jsx` General tab for all users
 
+---
 
+## Phase 14 — Monthly-Only Tasks, Quick Edit & Content Preview
+
+### Purpose
+Improve task management UX with three features: (1) Monthly-only tasks that auto-deactivate at month end, (2) Quick edit from the task detail page without the 7-step wizard, (3) Content preview showing what the task will actually send.
+
+### Result
+- Tasks can be set to "Only This Month" with monthly skip days and auto-expiry. The scheduler engine auto-deactivates them when the month changes.
+- Every card on TaskDetailPage has a ✏️ pencil button that opens the TaskEditorDialog directly on the relevant tab (Details/Target/Action/Schedule/Safety).
+- A Content Preview card shows sticker thumbnails (loaded from Telegram API), text messages, file info, and forward details.
+- TaskEditorDialog reorganized from 4 tabs to 5 clearly-named tabs: Details → Target → Action → Schedule → Safety.
+
+### Tasks
+- [x] Add `this_month_only`, `monthly_skip_days`, `active_month`, `active_year` to `SkipDays` model
+- [x] Add month-expiry check in scheduler engine `_execute_wrapper()`
+- [x] Add monthly skip day check in scheduler engine `_is_off_day()`
+- [x] Auto-fill active month/year in `task_service.py` on create/toggle
+- [x] Add `expire_monthly_task()` method to task service
+- [x] Add "Only This Month" toggle + day picker in `CreateTaskPage.jsx`
+- [x] Rewrite `TaskEditorDialog.jsx` — 5 tabs with `initialTab` prop, target tab, action+content combined
+- [x] Rewrite `TaskDetailPage.jsx` — quick edit buttons, content preview card, sticker thumbnail loading
+- [x] Reorganize editor tabs: general/content/options → Details/Action/Safety
+- [x] Update `project_overview.md` with new features

@@ -166,6 +166,9 @@ Users can define:
 
 On skip days, the task does not execute.
 
+**Monthly-Only Mode:**
+Tasks can optionally be set to "Only This Month" — the task will only run during the current month and auto-deactivate when the month ends. This is useful for day-offs that change every month (e.g., rotating shift schedules). When enabled, users can pick specific days of the current month to skip. Re-enabling the task in a new month automatically refreshes the active period and clears old skip days.
+
 ### 6. Template System (Advanced Batch Engine)
 
 The system moves beyond simple "copy-paste" templates to a sophisticated **Batch Instantiation Engine**.
@@ -310,9 +313,29 @@ Each task card shows:
 Users can also:
 
 - Edit existing tasks
+- **Quick Edit** any section from the task detail page (see below)
 - Enable/disable individual tasks
 - Delete tasks
 - View task execution history
+
+### Task Detail Page Features
+
+**Quick Edit:**
+Each section of the task detail page (Configuration, Target, Content, Schedule, Skip Days) has a pencil icon button. Clicking it opens the **Task Editor Dialog** directly on the relevant tab — so users can change one thing without going through the full 7-step wizard. Changes save via the API and refresh the page.
+
+The editor dialog has 5 tabs:
+- **Details** — Task name and description
+- **Target** — Group/channel picker (loads live list from the Telegram account)
+- **Action** — Action type picker + content editor combined in one view
+- **Schedule** — Schedule type, time, timezone, repeat days, random delay
+- **Safety** — Simulate typing, skip days (weekly + specific dates), Only This Month
+
+**Content Preview:**
+A dedicated card on the detail page shows exactly what the task will send:
+- Sticker tasks: actual thumbnail loaded from Telegram API + emoji + pack name
+- Text tasks: full message preview with parse mode badge
+- Photo/Video/Document: file icon, path, caption preview
+- Forward: source chat ID and message ID
 
 ---
 
