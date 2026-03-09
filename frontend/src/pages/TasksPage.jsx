@@ -223,7 +223,12 @@ const TasksPage = () => {
                                         </div>
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-muted-foreground">Schedule</span>
-                                            <span className="font-medium capitalize">{task.schedule?.type} at {format24to12(task.schedule?.time)}</span>
+                                            <span className="font-medium capitalize">
+                                                {task.schedule?.type === 'interval'
+                                                    ? `Every ${task.schedule.interval_hours || 0}h ${task.schedule.interval_minutes || 0}m`
+                                                    : `${task.schedule?.type} at ${format24to12(task.schedule?.time)}`
+                                                }
+                                            </span>
                                         </div>
                                         {task.next_execution && (
                                             <div className="flex items-center justify-between text-xs">

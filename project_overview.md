@@ -149,11 +149,21 @@ The system supports multiple action types:
 
 Users can choose how tasks repeat:
 
-- **Daily** — every day at set time
-- **Weekly** — specific days of the week (e.g., Mon/Wed/Fri)
+- **Daily** — every day at set time(s)
+- **Weekly** — specific days of the week (e.g., Mon/Wed/Fri), with optional bi-weekly/tri-weekly repeat
 - **Monthly** — specific day of month (e.g., 1st, 15th)
+- **Interval** — repeat every N hours and/or M minutes continuously (e.g., every 2h 30m)
 - **Custom days** — pick exact days
 - **Specific dates only** — one-time or specific date list (e.g., only 15 Feb, 20 Feb, 25 Feb)
+
+**Advanced Schedule Options:**
+
+- **Multiple times per day** — run at 9:00 AM, 3:00 PM, and 9:00 PM on the same schedule (daily/weekly/monthly)
+- **Bi-weekly / tri-weekly repeat** — weekly tasks can repeat every 1, 2, 3, or 4 weeks
+- **Start date** — task won't run before this date
+- **End date** — task auto-completes after this date
+- **Execution limit** — auto-complete the task after N executions (e.g., run 50 times then stop)
+- **Random delay (anti-ban)** — adds 0 to N minutes of jitter before each execution
 
 ### 5. Smart Skip System (Off Days)
 

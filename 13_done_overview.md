@@ -1,4 +1,4 @@
-# Phase 14 Completion Overview — Monthly-Only Tasks, Quick Edit & Content Preview
+# Phase 14 Completion Overview — Monthly-Only, Quick Edit, Content Preview, Timezone Fix & Advanced Scheduling
 
 ## 🎯 Phase Goal
 Add three features to improve task management:
@@ -77,6 +77,15 @@ Add three features to improve task management:
 - Static schedule times converted too ("daily at 09:00" → "daily at 9:00 AM")
 - Updated 9 files: DashboardPage, TaskDetailPage, TasksPage, SettingsPage, AdminTasksPage, AdminDashboardPage, CreateTaskPage, TemplateInstantiationDialog, TaskEditorDialog
 
+### 7. Advanced Schedule Features
+**Planned:** 5 new schedule capabilities
+**Delivered Reality:**
+- **Interval-based scheduling** — new "interval" schedule type, `IntervalTrigger` in APScheduler, hours + minutes inputs
+- **Multiple times per day** — `times[]` array, creates multiple CronTrigger jobs per task (`_t0`, `_t1`, ...), add/remove time slot UI
+- **Bi-weekly/tri-weekly repeat** — `repeat_every_n_weeks` field with skip check in `_execute_wrapper`, dropdown selector (1-4 weeks)
+- **Start/End dates** — date range constraints passed to triggers + `_apply_date_bounds()`, auto-completes past end date
+- **Execution count limit** — `execution_count` incremented per run, `max_executions` auto-completes task, "12 / 50" display with "completed" badge
+
 ## 🛠 Tech Stack Decisions Validated
 
 | Component | Choice | Validation Status |
@@ -88,12 +97,16 @@ Add three features to improve task management:
 | Tab naming | Details/Target/Action/Schedule/Safety | ✅ Follows user mental model |
 | Timezone handling | UTC → task timezone on frontend | ✅ Times now display correctly |
 | 12-hour format | `Intl.DateTimeFormat` with `hour12: true` | ✅ Consistent AM/PM across platform |
+| Interval scheduling | APScheduler `IntervalTrigger` | ✅ Repeats every N hours/minutes |
+| Multi-time | Multiple CronTrigger jobs per task | ✅ Multiple slots per day |
+| Execution limit | Counter + auto-complete in `update_after_execution` | ✅ Auto-stops at N executions |
 
 ## ⚠️ Challenges Overcome
 1. **Action type and content were split across two tabs** → **Fix:** Combined them into a single "Action" tab — pick type at top, configure content below.
 2. **No way to quick-edit target group** → **Fix:** Added dedicated "Target" tab that loads groups via `TargetSelectionList` component.
 3. **Sticker preview needed live API call** → **Fix:** `useEffect` loads sticker thumbnail on page mount when the task has a sticker action.
 4. **Frontend showed wrong times** → **Fix:** Backend stores UTC, frontend was treating as local time. Created `lib/time.js` to convert UTC → task timezone with 12-hour format.
+5. **Interval type needs different display** → **Fix:** Conditional rendering shows "Every 2h 30m" instead of "interval at 9:00 AM" across TasksPage, CreateTaskPage review, and TaskDetailPage.
 
 ## 📁 Files Changed
 
@@ -117,6 +130,12 @@ The platform now supports:
 - **Monthly-only tasks** with automatic expiry and month-specific skip days
 - **Quick editing** any task section directly from the detail page via 5 organized tabs
 - **Content preview** showing exactly what each task will send (stickers, text, files, forwards)
+- **Timezone-aware 12-hour time display** across the entire platform
+- **Interval-based scheduling** for repeating tasks every N hours/minutes
+- **Multiple times per day** with add/remove time slots
+- **Bi-weekly/tri-weekly repeat** for weekly tasks
+- **Start/end date constraints** with auto-completion
+- **Execution count limits** with auto-completion
 
 **Next Step:** Phase 15 — to be determined by the user.
 

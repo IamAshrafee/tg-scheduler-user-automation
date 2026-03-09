@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import TargetSelectionList from '../common/TargetSelectionList';
+import { format24to12 } from '../../lib/time';
 
 // --- Constants ---
 const ACTION_TYPES = [
@@ -41,6 +42,7 @@ const SCHEDULE_TYPES = [
     { value: 'daily', label: 'Daily', desc: 'Every day at a specific time' },
     { value: 'weekly', label: 'Weekly', desc: 'On selected days of the week' },
     { value: 'monthly', label: 'Monthly', desc: 'On selected days of the month' },
+    { value: 'interval', label: 'Interval', desc: 'Repeat every N hours/minutes' },
     { value: 'custom_days', label: 'Custom Days', desc: 'Choose specific weekdays' },
     { value: 'specific_dates', label: 'Specific Dates', desc: 'One-time on specific dates' },
 ];
@@ -530,6 +532,116 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId, initialTab
                 </div>
             )}
 
+            {/* Interval config */}
+            {form.schedule.type === 'interval' && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <Label className="text-xs font-medium mb-1 block">Every N Hours</Label>
+                        <Input
+                            type="number" min="0" max="168"
+                            value={form.schedule.interval_hours || 0}
+                            onChange={e => updateNested('schedule', 'interval_hours', parseInt(e.target.value) || 0)}
+                        />
+                    </div>
+                    <div>
+                        <Label className="text-xs font-medium mb-1 block">And N Minutes</Label>
+                        <Input
+                            type="number" min="0" max="59"
+                            value={form.schedule.interval_minutes || 0}
+                            onChange={e => updateNested('schedule', 'interval_minutes', parseInt(e.target.value) || 0)}
+                        />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground sm:col-span-2">
+                        Task will repeat every {form.schedule.interval_hours || 0}h {form.schedule.interval_minutes || 0}m.
+                    </p>
+                </div>
+            )}
+
+            {/* Multiple times per day */}
+            {['daily', 'weekly', 'monthly'].includes(form.schedule.type) && (
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <Label className="text-xs font-medium">Multiple Times Per Day</Label>
+                        <button
+                            onClick={() => {
+                                const times = form.schedule.times || [];
+                                updateNested('schedule', 'times', [...times, '12:00']);
+                            }}
+                            className="text-xs text-primary hover:underline"
+                        >+ Add time slot</button>
+                    </div>
+                    {(form.schedule.times || []).length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                            {form.schedule.times.map((t, i) => (
+                                <div key={i} className="flex items-center gap-1 bg-secondary rounded-md px-2 py-1">
+                                    <input
+                                        type="time" value={t}
+                                        onChange={e => {
+                                            const newTimes = [...form.schedule.times];
+                                            newTimes[i] = e.target.value;
+                                            updateNested('schedule', 'times', newTimes);
+                                        }}
+                                        className="bg-transparent text-sm border-none outline-none w-24"
+                                    />
+                                    <button
+                                        onClick={() => updateNested('schedule', 'times', form.schedule.times.filter((_, idx) => idx !== i))}
+                                        className="text-muted-foreground hover:text-destructive text-sm"
+                                    >×</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {(form.schedule.times || []).length > 0 && (
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                            Primary ({format24to12(form.schedule.time)}) + {form.schedule.times.length} extra slot(s).
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {/* Bi-weekly selector */}
+            {form.schedule.type === 'weekly' && (
+                <div>
+                    <Label className="text-xs font-medium mb-1 block">Repeat Every</Label>
+                    <Select
+                        value={String(form.schedule.repeat_every_n_weeks || 1)}
+                        onValueChange={value => updateNested('schedule', 'repeat_every_n_weeks', parseInt(value))}
+                    >
+                        <SelectTrigger className="w-full">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="1">Every week</SelectItem>
+                            <SelectItem value="2">Every 2 weeks</SelectItem>
+                            <SelectItem value="3">Every 3 weeks</SelectItem>
+                            <SelectItem value="4">Every 4 weeks</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+
+            {/* Start / End Date */}
+            <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <Label className="text-xs font-medium mb-1 block">Start Date (optional)</Label>
+                    <Input
+                        type="date"
+                        value={form.schedule.start_date || ''}
+                        onChange={e => updateNested('schedule', 'start_date', e.target.value || '')}
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Won't run before this date</p>
+                </div>
+                <div>
+                    <Label className="text-xs font-medium mb-1 block">End Date (optional)</Label>
+                    <Input
+                        type="date"
+                        value={form.schedule.end_date || ''}
+                        onChange={e => updateNested('schedule', 'end_date', e.target.value || '')}
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Auto-completes after this date</p>
+                </div>
+            </div>
+
             <div>
                 <Label className="text-xs font-medium mb-1 block">Random Delay: {form.schedule.random_delay_minutes} min</Label>
                 <Input
@@ -554,6 +666,17 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId, initialTab
                     checked={form.simulate_typing}
                     onCheckedChange={(checked) => updateForm('simulate_typing', checked)}
                 />
+            </div>
+
+            {/* Max Executions */}
+            <div className="p-4 rounded-lg border">
+                <Label className="text-xs font-medium mb-1 block">Execution Limit (optional)</Label>
+                <Input
+                    type="number" min="0" placeholder="Unlimited"
+                    value={form.max_executions || ''}
+                    onChange={e => updateForm('max_executions', parseInt(e.target.value) || null)}
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">Auto-completes after this many executions. Leave empty for unlimited.</p>
             </div>
             <div>
                 <Label className="text-xs font-medium mb-2 block">Skip Days (Safe Mode)</Label>

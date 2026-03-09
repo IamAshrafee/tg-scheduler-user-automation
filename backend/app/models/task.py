@@ -37,18 +37,30 @@ class ActionContent(BaseModel):
 
 
 class TaskSchedule(BaseModel):
-    type: str  # "daily" | "weekly" | "monthly" | "custom_days" | "specific_dates"
-    time: str  # "09:00" HH:MM 24hr
+    type: str  # "daily" | "weekly" | "monthly" | "custom_days" | "specific_dates" | "interval"
+    time: str  # "09:00" HH:MM 24hr (primary time, also start-of-day for interval)
     timezone: Optional[str] = None  # inherited from user if null
+
+    # Multiple times per day (e.g., ["09:00", "15:00", "21:00"])
+    times: Optional[List[str]] = None
 
     # Weekly
     days_of_week: Optional[List[int]] = None  # [0,1,2,3,4] Mon-Fri
+    repeat_every_n_weeks: int = 1  # 1 = every week, 2 = bi-weekly, etc.
 
     # Monthly
     days_of_month: Optional[List[int]] = None  # [1,15]
 
     # Specific dates
     specific_dates: Optional[List[str]] = None  # ["2026-02-20"]
+
+    # Interval-based (type="interval")
+    interval_hours: Optional[int] = None   # every N hours
+    interval_minutes: Optional[int] = None  # every N minutes (added to hours)
+
+    # Date range
+    start_date: Optional[str] = None  # "2026-03-10" — don't run before this
+    end_date: Optional[str] = None    # "2026-03-25" — auto-deactivate after this
 
     # Anti-ban
     random_delay_minutes: int = 0
@@ -76,6 +88,7 @@ class TaskCreate(BaseModel):
     schedule: TaskSchedule
 
     simulate_typing: bool = False
+    max_executions: Optional[int] = None
     skip_days: SkipDays = SkipDays()
     template_id: Optional[str] = None
     batch_id: Optional[str] = None
@@ -89,6 +102,7 @@ class TaskUpdate(BaseModel):
     action_content: Optional[ActionContent] = None
     schedule: Optional[TaskSchedule] = None
     simulate_typing: Optional[bool] = None
+    max_executions: Optional[int] = None
     skip_days: Optional[SkipDays] = None
     batch_id: Optional[str] = None
 
@@ -111,9 +125,11 @@ class TaskInDB(BaseModel):
     skip_days: SkipDays = SkipDays()
 
     is_enabled: bool = True
-    status: str = "active"  # "active" | "paused" | "error"
+    status: str = "active"  # "active" | "paused" | "error" | "expired" | "completed"
     last_execution: Optional[datetime] = None
     next_execution: Optional[datetime] = None
+    execution_count: int = 0
+    max_executions: Optional[int] = None  # null = unlimited
     template_id: Optional[str] = None
     batch_id: Optional[str] = None
 

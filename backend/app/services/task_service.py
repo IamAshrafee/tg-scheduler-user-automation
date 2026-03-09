@@ -8,64 +8,144 @@ from app.database import get_db
 from app.models.task import Task, TaskCreate, TaskUpdate
 
 
-def calculate_next_execution(schedule: dict, timezone_str: str) -> Optional[datetime]:
+def _apply_date_bounds(dt: Optional[datetime], schedule: dict, tz) -> Optional[datetime]:
+    """Clamp a candidate datetime to start_date/end_date bounds. Returns None if out of range."""
+    if dt is None:
+        return None
+    start_date = schedule.get("start_date")
+    end_date = schedule.get("end_date")
+    if start_date:
+        start_dt = tz.localize(datetime.strptime(start_date, "%Y-%m-%d").replace(hour=0, minute=0))
+        if dt < start_dt:
+            # Push to start_date at the scheduled time
+            parts = schedule.get("time", "09:00").split(":")
+            dt = start_dt.replace(hour=int(parts[0]), minute=int(parts[1]), second=0, microsecond=0)
+    if end_date:
+        end_dt = tz.localize(datetime.strptime(end_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59))
+        if dt > end_dt:
+            return None
+    return dt
+
+
+def _get_all_times(schedule: dict) -> list:
+    """Get all time slots — uses 'times' if set, otherwise falls back to 'time'."""
+    times = schedule.get("times")
+    if times and len(times) > 0:
+        return sorted(times)
+    return [schedule.get("time", "09:00")]
+
+
+def _find_next_for_times(now, time_list, tz, offset_days=0):
+    """Find the earliest future run from a list of times on now + offset_days."""
+    candidates = []
+    for t in time_list:
+        parts = t.split(":")
+        h, m = int(parts[0]), int(parts[1])
+        candidate = (now + timedelta(days=offset_days)).replace(hour=h, minute=m, second=0, microsecond=0)
+        if candidate > now:
+            candidates.append(candidate)
+    return min(candidates) if candidates else None
+
+
+def calculate_next_execution(schedule: dict, timezone_str: str, last_execution: datetime = None) -> Optional[datetime]:
     """Calculate the next execution time based on schedule config."""
     tz = pytz.timezone(timezone_str or "Asia/Dhaka")
     now = datetime.now(tz)
 
-    # Parse time
+    schedule_type = schedule.get("type", "daily")
+    time_list = _get_all_times(schedule)
     parts = schedule.get("time", "09:00").split(":")
     hour, minute = int(parts[0]), int(parts[1])
-    schedule_type = schedule.get("type", "daily")
 
-    if schedule_type == "daily":
-        next_run = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    result = None
+
+    if schedule_type == "interval":
+        interval_h = schedule.get("interval_hours", 0) or 0
+        interval_m = schedule.get("interval_minutes", 0) or 0
+        total_minutes = interval_h * 60 + interval_m
+        if total_minutes <= 0:
+            total_minutes = 60  # fallback: 1 hour
+        if last_execution:
+            # Convert last_execution (UTC naive) to tz-aware
+            last_aware = pytz.utc.localize(last_execution).astimezone(tz)
+            next_run = last_aware + timedelta(minutes=total_minutes)
+        else:
+            # First run: start now + interval (or at start_date)
+            next_run = now + timedelta(minutes=total_minutes)
         if next_run <= now:
-            next_run += timedelta(days=1)
-        return next_run.astimezone(pytz.utc).replace(tzinfo=None)
+            # Catch up: skip to next future slot
+            elapsed = (now - next_run).total_seconds() / 60
+            skips = int(elapsed / total_minutes) + 1
+            next_run = next_run + timedelta(minutes=total_minutes * skips)
+        result = next_run
+
+    elif schedule_type == "daily":
+        # Try all time slots today, then tomorrow
+        result = _find_next_for_times(now, time_list, tz, 0)
+        if not result:
+            result = _find_next_for_times(now, time_list, tz, 1)
 
     elif schedule_type == "weekly":
         days = schedule.get("days_of_week", [0, 1, 2, 3, 4])
+        n_weeks = schedule.get("repeat_every_n_weeks", 1) or 1
         if not days:
             return None
-        # Find next matching day
-        for offset in range(8):
-            candidate = now + timedelta(days=offset)
-            candidate = candidate.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            if candidate > now and candidate.weekday() in days:
-                return candidate.astimezone(pytz.utc).replace(tzinfo=None)
-        return None
+        # Look ahead enough days for bi-weekly/tri-weekly
+        for offset in range(8 * n_weeks):
+            candidate_day = now + timedelta(days=offset)
+            if candidate_day.weekday() in days:
+                # Check week interval: is this the right week?
+                if n_weeks > 1 and last_execution:
+                    last_aware = pytz.utc.localize(last_execution).astimezone(tz)
+                    weeks_diff = (candidate_day.date() - last_aware.date()).days // 7
+                    if weeks_diff > 0 and weeks_diff % n_weeks != 0:
+                        continue
+                found = _find_next_for_times(now, time_list, tz, offset)
+                if found:
+                    result = found
+                    break
 
     elif schedule_type == "monthly":
         days_of_month = schedule.get("days_of_month", [1])
         if not days_of_month:
             return None
-        # Find next matching day of month
-        for offset in range(62):  # look ahead ~2 months
+        for offset in range(62):
             candidate = now + timedelta(days=offset)
-            candidate = candidate.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            if candidate > now and candidate.day in days_of_month:
-                return candidate.astimezone(pytz.utc).replace(tzinfo=None)
-        return None
+            if candidate.day in days_of_month:
+                found = _find_next_for_times(now, time_list, tz, offset)
+                if found:
+                    result = found
+                    break
 
     elif schedule_type in ("custom_days", "specific_dates"):
         dates = schedule.get("specific_dates", [])
         if not dates:
             return None
-        future_dates = []
-        for d in dates:
-            try:
-                dt = tz.localize(datetime.strptime(d, "%Y-%m-%d").replace(hour=hour, minute=minute))
-                if dt > now:
-                    future_dates.append(dt)
-            except ValueError:
-                continue
-        if future_dates:
-            next_dt = min(future_dates)
-            return next_dt.astimezone(pytz.utc).replace(tzinfo=None)
+        future_candidates = []
+        for t in time_list:
+            t_parts = t.split(":")
+            t_h, t_m = int(t_parts[0]), int(t_parts[1])
+            for d in dates:
+                try:
+                    dt = tz.localize(datetime.strptime(d, "%Y-%m-%d").replace(hour=t_h, minute=t_m))
+                    if dt > now:
+                        future_candidates.append(dt)
+                except ValueError:
+                    continue
+        if future_candidates:
+            result = min(future_candidates)
+        else:
+            return None
+
+    if result is None:
         return None
 
-    return None
+    # Apply date bounds
+    result = _apply_date_bounds(result, schedule, tz)
+    if result is None:
+        return None
+
+    return result.astimezone(pytz.utc).replace(tzinfo=None)
 
 
 class TaskService:
@@ -207,7 +287,7 @@ class TaskService:
         return Task(**doc) if doc else None
 
     async def update_after_execution(self, task_id: str, success: bool, timezone: str):
-        """Update task after execution — set last_execution and recalculate next_execution."""
+        """Update task after execution — set last_execution, increment count, recalculate next_execution."""
         try:
             oid = ObjectId(task_id)
         except Exception:
@@ -216,16 +296,36 @@ class TaskService:
         if not task:
             return
 
+        now_utc = datetime.utcnow()
+        new_count = task.execution_count + 1
+
         schedule_dict = task.schedule.model_dump()
-        next_exec = calculate_next_execution(schedule_dict, schedule_dict.get("timezone", timezone))
+        next_exec = calculate_next_execution(
+            schedule_dict,
+            schedule_dict.get("timezone", timezone),
+            last_execution=now_utc,
+        )
 
         update = {
-            "last_execution": datetime.utcnow(),
+            "last_execution": now_utc,
             "next_execution": next_exec,
-            "updated_at": datetime.utcnow(),
+            "execution_count": new_count,
+            "updated_at": now_utc,
         }
+
         if not success:
             update["status"] = "error"
+
+        # Auto-complete if max executions reached
+        if task.max_executions and new_count >= task.max_executions:
+            update["is_enabled"] = False
+            update["status"] = "completed"
+            update["next_execution"] = None
+
+        # Auto-deactivate if past end_date
+        if next_exec is None and task.schedule.end_date:
+            update["is_enabled"] = False
+            update["status"] = "completed"
 
         await self.collection.update_one({"_id": oid}, {"$set": update})
 

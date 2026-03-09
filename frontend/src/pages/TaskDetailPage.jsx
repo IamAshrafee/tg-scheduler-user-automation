@@ -28,7 +28,7 @@ import {
     Hash,
     Megaphone,
 } from 'lucide-react';
-import { formatDateTime, formatTime, formatLogTime, getTaskTimezone } from '../lib/time';
+import { formatDateTime, formatTime, formatLogTime, getTaskTimezone, format24to12 } from '../lib/time';
 
 const ACTION_LABELS = {
     send_sticker: 'Send Sticker',
@@ -407,16 +407,36 @@ const TaskDetailPage = () => {
                     <CardContent className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Type</span>
-                            <span className="font-medium capitalize">{task.schedule?.type}</span>
+                            <span className="font-medium capitalize">{task.schedule?.type === 'interval' ? `Interval (${task.schedule.interval_hours || 0}h ${task.schedule.interval_minutes || 0}m)` : task.schedule?.type}</span>
                         </div>
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Time</span>
-                            <span className="font-mono font-medium">{task.schedule?.time}</span>
-                        </div>
+                        {task.schedule?.type !== 'interval' && (
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Time</span>
+                                <span className="font-mono font-medium">{format24to12(task.schedule?.time)}</span>
+                            </div>
+                        )}
+                        {(task.schedule?.times || []).length > 0 && (
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Extra times</span>
+                                <span className="font-mono text-xs">{task.schedule.times.map(t => format24to12(t)).join(', ')}</span>
+                            </div>
+                        )}
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Timezone</span>
                             <span className="font-medium">{task.schedule?.timezone || 'UTC'}</span>
                         </div>
+                        {task.schedule?.type === 'weekly' && (task.schedule?.repeat_every_n_weeks || 1) > 1 && (
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Repeat</span>
+                                <span className="font-medium">Every {task.schedule.repeat_every_n_weeks} weeks</span>
+                            </div>
+                        )}
+                        {(task.schedule?.start_date || task.schedule?.end_date) && (
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Date range</span>
+                                <span className="font-medium text-xs">{task.schedule.start_date || '—'} → {task.schedule.end_date || '∞'}</span>
+                            </div>
+                        )}
                         {task.next_execution && (
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Next run</span>
@@ -429,6 +449,13 @@ const TaskDetailPage = () => {
                                 <span className="font-mono text-xs">{formatDateTime(task.last_execution, getTaskTimezone(task))}</span>
                             </div>
                         )}
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Executions</span>
+                            <span className="font-medium">
+                                {task.execution_count || 0}{task.max_executions ? ` / ${task.max_executions}` : ''}
+                                {task.status === 'completed' && <span className="ml-1 text-xs text-emerald-500">(completed)</span>}
+                            </span>
+                        </div>
                         {task.schedule?.random_delay_minutes > 0 && (
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Random delay</span>

@@ -1339,4 +1339,10 @@ Improve task management UX with three features: (1) Monthly-only tasks that auto
 - [x] Create `frontend/src/lib/time.js` — shared timezone-aware formatting utilities
 - [x] Fix all frontend time displays to convert UTC → task timezone with 12-hour format
 - [x] Convert all static schedule time strings to 12-hour format (`format24to12`)
+- [x] Add interval-based scheduling (`IntervalTrigger`, interval_hours/minutes fields)
+- [x] Add multiple times per day (times array, multi-time CronTrigger jobs)
+- [x] Add bi-weekly/tri-weekly repeat (repeat_every_n_weeks + skip check in _execute_wrapper)
+- [x] Add start/end date constraints (CronTrigger start_date/end_date + _apply_date_bounds)
+- [x] Add execution count limit (execution_count, max_executions, auto-complete)
+- [x] Update CreateTaskPage, TaskEditorDialog, TaskDetailPage, TasksPage with new schedule UI
 - [x] Update `project_overview.md` with new features
