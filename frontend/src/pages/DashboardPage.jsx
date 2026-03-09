@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { Plus, Users, CalendarClock, Activity, ArrowRight } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
 import { SkeletonStatsGrid, SkeletonCard, Skeleton } from '../components/ui/skeleton';
+import { formatDateTime, formatTime, getTaskTimezone } from '../lib/time';
 
 const DashboardPage = () => {
     const { user } = useAuth();
@@ -152,7 +153,7 @@ const DashboardPage = () => {
                                             </div>
                                         </div>
                                         <div className="text-sm text-muted-foreground font-mono bg-muted px-2 py-1 rounded text-xs">
-                                            {new Date(task.next_execution).toLocaleString()}
+                                            {formatDateTime(task.next_execution, getTaskTimezone(task))}
                                         </div>
                                     </div>
                                 ))}
@@ -195,7 +196,7 @@ const DashboardPage = () => {
                                             <p className="text-sm font-medium leading-none">
                                                 {log.task_name}
                                                 <span className="ml-2 text-xs font-normal text-muted-foreground">
-                                                    {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    {formatTime(log.created_at)}
                                                 </span>
                                             </p>
                                             <p className="text-xs text-muted-foreground line-clamp-1">

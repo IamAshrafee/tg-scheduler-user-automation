@@ -1336,4 +1336,7 @@ Improve task management UX with three features: (1) Monthly-only tasks that auto
 - [x] Rewrite `TaskEditorDialog.jsx` — 5 tabs with `initialTab` prop, target tab, action+content combined
 - [x] Rewrite `TaskDetailPage.jsx` — quick edit buttons, content preview card, sticker thumbnail loading
 - [x] Reorganize editor tabs: general/content/options → Details/Action/Safety
+- [x] Create `frontend/src/lib/time.js` — shared timezone-aware formatting utilities
+- [x] Fix all frontend time displays to convert UTC → task timezone with 12-hour format
+- [x] Convert all static schedule time strings to 12-hour format (`format24to12`)
 - [x] Update `project_overview.md` with new features

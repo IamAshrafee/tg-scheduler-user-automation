@@ -35,6 +35,7 @@ import {
     Shield,
     CalendarOff,
 } from 'lucide-react';
+import { format24to12 } from '../lib/time';
 
 const STEPS = [
     { title: 'Account', icon: Users, desc: 'Select Telegram account' },
@@ -828,8 +829,8 @@ const CreateTaskPage = () => {
                                             updateForm('skip_days', { ...form.skip_days, monthly_skip_days: newDays });
                                         }}
                                         className={`w-8 h-8 rounded border text-xs font-medium transition-all ${(form.skip_days.monthly_skip_days || []).includes(day)
-                                                ? 'border-amber-500 bg-amber-500/20 text-amber-600 dark:text-amber-400'
-                                                : 'border-border hover:bg-muted'
+                                            ? 'border-amber-500 bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                                            : 'border-border hover:bg-muted'
                                             }`}
                                     >
                                         {day}
@@ -888,7 +889,7 @@ const CreateTaskPage = () => {
                     </div>
                     <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Schedule</span>
-                        <span className="font-medium capitalize">{form.schedule.type} at {form.schedule.time}</span>
+                        <span className="font-medium capitalize">{form.schedule.type} at {format24to12(form.schedule.time)}</span>
                     </div>
                     {form.simulate_typing && (
                         <div className="flex justify-between text-sm">

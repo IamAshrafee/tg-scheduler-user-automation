@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
 import { SkeletonCard } from '../components/ui/skeleton';
+import { formatDateTime, getTaskTimezone, format24to12 } from '../lib/time';
 import {
     Select,
     SelectContent,
@@ -222,13 +223,13 @@ const TasksPage = () => {
                                         </div>
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-muted-foreground">Schedule</span>
-                                            <span className="font-medium capitalize">{task.schedule?.type} at {task.schedule?.time}</span>
+                                            <span className="font-medium capitalize">{task.schedule?.type} at {format24to12(task.schedule?.time)}</span>
                                         </div>
                                         {task.next_execution && (
                                             <div className="flex items-center justify-between text-xs">
                                                 <span className="text-muted-foreground">Next run</span>
                                                 <span className="font-mono text-[11px]">
-                                                    {new Date(task.next_execution).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    {formatDateTime(task.next_execution, getTaskTimezone(task))}
                                                 </span>
                                             </div>
                                         )}

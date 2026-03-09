@@ -34,6 +34,7 @@ import {
     SelectValue,
 } from '../components/ui/select';
 import { Skeleton } from '../components/ui/skeleton';
+import { formatLogTime } from '../lib/time';
 
 const TIMEZONE_OPTIONS = [
     { value: 'UTC', label: 'UTC (GMT+0)' },
@@ -553,10 +554,7 @@ const ActivityLogTab = () => {
                                             </td>
                                             <td className="p-3 text-right">
                                                 <span className="text-xs text-muted-foreground font-mono whitespace-nowrap">
-                                                    {new Date(log.created_at).toLocaleString([], {
-                                                        month: 'short', day: 'numeric',
-                                                        hour: '2-digit', minute: '2-digit'
-                                                    })}
+                                                    {formatLogTime(log.created_at)}
                                                 </span>
                                             </td>
                                         </tr>

@@ -13,6 +13,7 @@ import {
     MinusCircle,
 } from 'lucide-react';
 import { Skeleton } from '../../components/ui/skeleton';
+import { formatLogTime } from '../../lib/time';
 
 const AdminDashboardPage = () => {
     const [stats, setStats] = useState(null);
@@ -152,7 +153,7 @@ const AdminDashboardPage = () => {
                                         <div className="flex items-center justify-between">
                                             <span className="font-medium text-red-400">{f.task_name || 'Unknown'}</span>
                                             <span className="text-xs text-muted-foreground">
-                                                {new Date(f.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                {formatLogTime(f.created_at)}
                                             </span>
                                         </div>
                                         <p className="text-xs text-muted-foreground mt-1 truncate">{f.reason || 'No details'}</p>

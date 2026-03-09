@@ -28,6 +28,7 @@ import {
     Hash,
     Megaphone,
 } from 'lucide-react';
+import { formatDateTime, formatTime, formatLogTime, getTaskTimezone } from '../lib/time';
 
 const ACTION_LABELS = {
     send_sticker: 'Send Sticker',
@@ -419,13 +420,13 @@ const TaskDetailPage = () => {
                         {task.next_execution && (
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Next run</span>
-                                <span className="font-mono text-xs">{new Date(task.next_execution).toLocaleString()}</span>
+                                <span className="font-mono text-xs">{formatDateTime(task.next_execution, getTaskTimezone(task))}</span>
                             </div>
                         )}
                         {task.last_execution && (
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Last run</span>
-                                <span className="font-mono text-xs">{new Date(task.last_execution).toLocaleString()}</span>
+                                <span className="font-mono text-xs">{formatDateTime(task.last_execution, getTaskTimezone(task))}</span>
                             </div>
                         )}
                         {task.schedule?.random_delay_minutes > 0 && (
@@ -534,7 +535,7 @@ const TaskDetailPage = () => {
                                                 {log.status}
                                             </span>
                                             <span className="text-xs text-muted-foreground font-mono">
-                                                {new Date(log.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                {formatLogTime(log.created_at, getTaskTimezone(task))}
                                             </span>
                                         </div>
                                         {log.error && <p className="text-xs text-muted-foreground mt-0.5">{log.error}</p>}

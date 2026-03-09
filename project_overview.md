@@ -519,8 +519,11 @@ Timezone is a first-class concept in this platform:
 - Users can **override the timezone per task** if needed (e.g., a task targeting a group in a different timezone).
 - All schedule times (duty in at 9:00 AM, etc.) are interpreted in the task's timezone.
 - The scheduler engine converts all times to UTC internally for accurate execution.
+- **Frontend always converts UTC back to the task's timezone for display** using the shared `frontend/src/lib/time.js` utility.
+- **All times are displayed in 12-hour format** (AM/PM) across the entire platform.
 - Activity logs display times in the user's timezone.
-- The dashboard's "Upcoming Actions" and "Next Execution" respect the user's timezone.
+- The dashboard's "Upcoming Actions" and "Next Execution" respect the task's timezone.
+- Static schedule times (e.g., "daily at 09:00") are also converted to 12-hour format ("daily at 9:00 AM").
 
 ---
 

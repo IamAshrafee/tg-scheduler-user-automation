@@ -16,6 +16,7 @@ import {
     ChevronLeft,
     ChevronRight,
 } from 'lucide-react';
+import { formatDateTime, getTaskTimezone } from '../../lib/time';
 
 const ACTION_LABELS = {
     send_sticker: '🔷 Sticker',
@@ -126,7 +127,7 @@ const AdminTasksPage = () => {
                                             </td>
                                             <td className="px-4 py-3 text-xs text-muted-foreground">
                                                 {t.next_execution
-                                                    ? new Date(t.next_execution).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                                    ? formatDateTime(t.next_execution, getTaskTimezone(t))
                                                     : '—'}
                                             </td>
                                         </tr>

@@ -67,6 +67,16 @@ Add three features to improve task management:
 - Made **Details** lightweight (just name + description with textarea)
 - Renamed **Options** → **Safety** for clearer identity (all protection features together)
 
+### 6. Timezone & 12-Hour Format Fix
+**Planned:** N/A (discovered during deployment testing)
+**Delivered Reality:**
+- Backend stores all times as naive UTC — frontend was interpreting them as browser-local time, causing wrong display
+- Created `frontend/src/lib/time.js` with 5 utilities: `formatDateTime`, `formatTime`, `formatLogTime`, `getTaskTimezone`, `format24to12`
+- All dynamic dates now convert UTC → task's timezone (from `schedule.timezone`) for display
+- All times displayed in 12-hour format (AM/PM) across the entire platform
+- Static schedule times converted too ("daily at 09:00" → "daily at 9:00 AM")
+- Updated 9 files: DashboardPage, TaskDetailPage, TasksPage, SettingsPage, AdminTasksPage, AdminDashboardPage, CreateTaskPage, TemplateInstantiationDialog, TaskEditorDialog
+
 ## 🛠 Tech Stack Decisions Validated
 
 | Component | Choice | Validation Status |
@@ -76,11 +86,14 @@ Add three features to improve task management:
 | Quick Edit | Reuse existing `TaskEditorDialog` + `initialTab` prop | ✅ Zero duplication |
 | Content Preview | Inline card on detail page + API fetch for sticker thumbnails | ✅ Shows real data |
 | Tab naming | Details/Target/Action/Schedule/Safety | ✅ Follows user mental model |
+| Timezone handling | UTC → task timezone on frontend | ✅ Times now display correctly |
+| 12-hour format | `Intl.DateTimeFormat` with `hour12: true` | ✅ Consistent AM/PM across platform |
 
 ## ⚠️ Challenges Overcome
 1. **Action type and content were split across two tabs** → **Fix:** Combined them into a single "Action" tab — pick type at top, configure content below.
 2. **No way to quick-edit target group** → **Fix:** Added dedicated "Target" tab that loads groups via `TargetSelectionList` component.
 3. **Sticker preview needed live API call** → **Fix:** `useEffect` loads sticker thumbnail on page mount when the task has a sticker action.
+4. **Frontend showed wrong times** → **Fix:** Backend stores UTC, frontend was treating as local time. Created `lib/time.js` to convert UTC → task timezone with 12-hour format.
 
 ## 📁 Files Changed
 
@@ -93,7 +106,8 @@ Add three features to improve task management:
 | `frontend/src/pages/TaskDetailPage.jsx` | **Rewritten** (quick edit buttons, content preview, monthly-only display) |
 | `frontend/src/components/tasks/TaskEditorDialog.jsx` | **Rewritten** (5 reorganized tabs, `initialTab` prop, target tab, monthly-only in safety) |
 | `frontend/src/components/templates/TemplateInstantiationDialog.jsx` | Modified (new fields in default task structure) |
-| `project_overview.md` | Updated (monthly-only, quick edit, content preview docs) |
+| `frontend/src/lib/time.js` | **Created** (timezone-aware formatting utilities) |
+| `project_overview.md` | Updated (monthly-only, quick edit, content preview, timezone docs) |
 | `roadmap.md` | Updated (Phase 14 added) |
 
 ## 🚀 Ready for Next Phase?

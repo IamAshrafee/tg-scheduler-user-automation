@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import { format24to12 } from '../../lib/time';
 
 import AccountSelectionCard from '../common/AccountSelectionCard';
 import TargetSelectionList from '../common/TargetSelectionList';
@@ -254,7 +255,7 @@ export default function TemplateInstantiationDialog({ isOpen, onClose, template,
                                                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
                                                         <div className="flex items-center gap-1">
                                                             <Clock className="h-3 w-3" />
-                                                            {task.schedule?.type === 'daily' ? `Daily at ${task.schedule.time}` : 'Scheduled'}
+                                                            {task.schedule?.type === 'daily' ? `Daily at ${format24to12(task.schedule.time)}` : 'Scheduled'}
                                                         </div>
                                                         {task.simulate_typing && (
                                                             <span className="text-blue-500">Typing enabled</span>
