@@ -6,11 +6,18 @@ echo "============================================="
 
 PROJECT_DIR="/var/www/tg-scheduler-user-automation"
 
+# ─── Git Pull ───
+echo ""
+echo "� Pulling latest changes..."
+cd "$PROJECT_DIR"
+git pull origin main
+echo "✅ Code updated"
+
 # ─── Backend ───
 echo ""
-echo "📦 Updating backend..."
-cd "$PROJECT_DIR/backend"
+echo "📦 Updating backend dependencies..."
 source "$PROJECT_DIR/venv/bin/activate"
+cd "$PROJECT_DIR/backend"
 pip install -r requirements.txt --quiet
 echo "✅ Backend dependencies updated"
 
@@ -20,8 +27,13 @@ echo "✅ Backend restarted"
 
 # ─── Frontend ───
 echo ""
-echo "🌐 Frontend: upload dist/ manually via SCP first, then run this script."
-echo "   scp -r frontend/dist/ ashrafee@62.72.42.124:/var/www/tg-scheduler-user-automation/frontend/dist/"
+echo "🌐 Building frontend..."
+cd "$PROJECT_DIR/frontend"
+npm install --silent
+npm run build
+echo "✅ Frontend built"
+
+echo "🔄 Reloading Nginx..."
 sudo systemctl reload nginx
 echo "✅ Nginx reloaded"
 
