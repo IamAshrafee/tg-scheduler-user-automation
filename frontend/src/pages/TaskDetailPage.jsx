@@ -4,6 +4,8 @@ import api from '../services/api';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import Modal from '../components/ui/modal';
+import TaskEditorDialog from '../components/tasks/TaskEditorDialog';
+import toast from 'react-hot-toast';
 import {
     ArrowLeft,
     Loader2,
@@ -23,6 +25,8 @@ import {
     FileText,
     Forward,
     CalendarOff,
+    Hash,
+    Megaphone,
 } from 'lucide-react';
 
 const ACTION_LABELS = {
@@ -57,23 +61,56 @@ const TaskDetailPage = () => {
     const [showDelete, setShowDelete] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
+    // Quick Edit state
+    const [quickEditOpen, setQuickEditOpen] = useState(false);
+    const [quickEditTab, setQuickEditTab] = useState('general');
+
+    // Sticker preview state
+    const [stickerPreview, setStickerPreview] = useState(null);
+    const [loadingStickerPreview, setLoadingStickerPreview] = useState(false);
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [taskRes, historyRes] = await Promise.all([
-                    api.get(`/tasks/${id}`),
-                    api.get(`/tasks/${id}/history?limit=20`),
-                ]);
-                setTask(taskRes.data);
-                setHistory(historyRes.data.logs || []);
-            } catch (e) {
-                console.error('Failed to load task:', e);
-            } finally {
-                setIsLoading(false);
-            }
-        };
         fetchData();
     }, [id]);
+
+    const fetchData = async () => {
+        try {
+            const [taskRes, historyRes] = await Promise.all([
+                api.get(`/tasks/${id}`),
+                api.get(`/tasks/${id}/history?limit=20`),
+            ]);
+            setTask(taskRes.data);
+            setHistory(historyRes.data.logs || []);
+        } catch (e) {
+            console.error('Failed to load task:', e);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Load sticker preview thumbnail
+    useEffect(() => {
+        if (task && task.action_type === 'send_sticker' && task.action_content?.sticker_set_id && task.action_content?.sticker_id) {
+            loadStickerPreview();
+        }
+    }, [task?.action_content?.sticker_id]);
+
+    const loadStickerPreview = async () => {
+        if (!task?.telegram_account_id || !task?.action_content?.sticker_set_id) return;
+        setLoadingStickerPreview(true);
+        try {
+            const res = await api.get(`/telegram-accounts/${task.telegram_account_id}/sticker-sets/${task.action_content.sticker_set_id}/stickers`);
+            const stickers = res.data.stickers || res.data || [];
+            const match = stickers.find(s => String(s.id) === String(task.action_content.sticker_id));
+            if (match?.thumbnail) {
+                setStickerPreview(match.thumbnail);
+            }
+        } catch (e) {
+            console.error('Failed to load sticker preview:', e);
+        } finally {
+            setLoadingStickerPreview(false);
+        }
+    };
 
     const handleToggle = async () => {
         setIsToggling(true);
@@ -112,6 +149,49 @@ const TaskDetailPage = () => {
         }
     };
 
+    // Quick Edit handlers
+    const openQuickEdit = (tab) => {
+        setQuickEditTab(tab);
+        setQuickEditOpen(true);
+    };
+
+    const handleQuickEditSave = async (updatedForm) => {
+        try {
+            const payload = {
+                name: updatedForm.name,
+                description: updatedForm.description,
+                telegram_account_id: updatedForm.telegram_account_id || task.telegram_account_id,
+                target: updatedForm.target,
+                action_type: updatedForm.action_type,
+                action_content: updatedForm.action_content,
+                schedule: updatedForm.schedule,
+                simulate_typing: updatedForm.simulate_typing,
+                skip_days: updatedForm.skip_days,
+            };
+            const res = await api.put(`/tasks/${id}`, payload);
+            setTask(res.data);
+            toast.success('Task updated successfully!');
+            // Re-fetch to get latest data (next_execution, etc.)
+            fetchData();
+        } catch (e) {
+            console.error('Failed to update task:', e);
+            toast.error(e.response?.data?.detail || 'Failed to update task');
+        }
+    };
+
+    // Quick edit pencil button
+    const QuickEditButton = ({ tab, className = '' }) => (
+        <Button
+            variant="ghost"
+            size="icon"
+            className={`h-7 w-7 text-muted-foreground hover:text-foreground ${className}`}
+            onClick={() => openQuickEdit(tab)}
+            title={`Quick edit`}
+        >
+            <Pencil className="h-3.5 w-3.5" />
+        </Button>
+    );
+
     if (isLoading) {
         return (
             <div className="flex h-full items-center justify-center">
@@ -130,6 +210,98 @@ const TaskDetailPage = () => {
     }
 
     const ActionIcon = ACTION_ICONS[task.action_type] || Clock;
+    const TargetIcon = task.target?.type === 'channel' ? Megaphone : Hash;
+
+    // --- Content Preview Renderer ---
+    const renderContentPreview = () => {
+        const { action_type, action_content } = task;
+        if (!action_content || Object.keys(action_content).length === 0) {
+            return <p className="text-sm text-muted-foreground italic">No content configured</p>;
+        }
+
+        switch (action_type) {
+            case 'send_text':
+                return (
+                    <div className="space-y-2">
+                        <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                            <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">{action_content.text || 'No text set'}</p>
+                        </div>
+                        {action_content.parse_mode && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium">
+                                {action_content.parse_mode}
+                            </span>
+                        )}
+                    </div>
+                );
+
+            case 'send_sticker':
+                return (
+                    <div className="flex items-center gap-4">
+                        <div className="w-20 h-20 rounded-lg border bg-muted/50 flex items-center justify-center overflow-hidden shrink-0">
+                            {loadingStickerPreview ? (
+                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                            ) : stickerPreview ? (
+                                <img src={stickerPreview} alt="Sticker" className="w-16 h-16 object-contain" />
+                            ) : (
+                                <span className="text-3xl">{action_content.sticker_emoji || '🎭'}</span>
+                            )}
+                        </div>
+                        <div className="space-y-1">
+                            {action_content.sticker_emoji && (
+                                <p className="text-sm">Emoji: <span className="text-lg">{action_content.sticker_emoji}</span></p>
+                            )}
+                            {action_content.sticker_set_id && (
+                                <p className="text-xs text-muted-foreground">Pack: <span className="font-mono">{action_content.sticker_set_id}</span></p>
+                            )}
+                            <p className="text-[10px] text-muted-foreground font-mono">ID: {action_content.sticker_id}</p>
+                        </div>
+                    </div>
+                );
+
+            case 'send_photo':
+            case 'send_video':
+            case 'send_document': {
+                const typeLabel = action_type.replace('send_', '');
+                const TypeIcon = ACTION_ICONS[action_type];
+                return (
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                            <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                                <TypeIcon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-medium capitalize">{typeLabel} file</p>
+                                <p className="text-xs text-muted-foreground truncate">{action_content.file_path || 'No file uploaded'}</p>
+                            </div>
+                        </div>
+                        {action_content.caption && (
+                            <div className="pl-3 border-l-2 border-primary/30">
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">Caption</p>
+                                <p className="text-sm">{action_content.caption}</p>
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            case 'forward_message':
+                return (
+                    <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Source Chat</span>
+                            <span className="font-mono font-medium">{action_content.source_chat_id || 'Not set'}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Message ID</span>
+                            <span className="font-mono font-medium">{action_content.source_message_id || 'Not set'}</span>
+                        </div>
+                    </div>
+                );
+
+            default:
+                return <p className="text-sm text-muted-foreground italic">Unknown action type</p>;
+        }
+    };
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -161,7 +333,7 @@ const TaskDetailPage = () => {
                     </Button>
                     <Link to={`/tasks/${id}/edit`}>
                         <Button variant="outline" size="sm">
-                            <Pencil className="mr-1.5 h-4 w-4" /> Edit
+                            <Pencil className="mr-1.5 h-4 w-4" /> Full Edit
                         </Button>
                     </Link>
                     <Button variant="destructive" size="sm" onClick={() => setShowDelete(true)}>
@@ -170,11 +342,15 @@ const TaskDetailPage = () => {
                 </div>
             </div>
 
-            {/* Config Summary */}
+            {/* Config Summary + Schedule */}
             <div className="grid gap-4 md:grid-cols-2">
+                {/* Task Configuration */}
                 <Card>
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-sm">Task Configuration</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm">Task Configuration</CardTitle>
+                            <QuickEditButton tab="details" />
+                        </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
@@ -186,7 +362,11 @@ const TaskDetailPage = () => {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Target</span>
-                            <span className="font-medium">{task.target?.chat_title || `Chat ${task.target?.chat_id}`}</span>
+                            <div className="flex items-center gap-1.5">
+                                <TargetIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="font-medium">{task.target?.chat_title || `Chat ${task.target?.chat_id}`}</span>
+                                <QuickEditButton tab="target" className="ml-1" />
+                            </div>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Status</span>
@@ -215,9 +395,13 @@ const TaskDetailPage = () => {
                     </CardContent>
                 </Card>
 
+                {/* Schedule */}
                 <Card>
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-sm">Schedule</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm">Schedule</CardTitle>
+                            <QuickEditButton tab="schedule" />
+                        </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
@@ -254,11 +438,27 @@ const TaskDetailPage = () => {
                 </Card>
             </div>
 
+            {/* Content Preview */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm">Content Preview</CardTitle>
+                        <QuickEditButton tab="action" />
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {renderContentPreview()}
+                </CardContent>
+            </Card>
+
             {/* Skip Days */}
             {((task.skip_days?.weekly_holidays?.length > 0) || (task.skip_days?.specific_dates?.length > 0) || (task.skip_days?.this_month_only && task.skip_days?.monthly_skip_days?.length > 0)) && (
                 <Card>
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-sm">Skip Days</CardTitle>
+                        <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm">Skip Days</CardTitle>
+                            <QuickEditButton tab="safety" />
+                        </div>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap gap-2">
@@ -363,6 +563,16 @@ const TaskDetailPage = () => {
                     </div>
                 </div>
             </Modal>
+
+            {/* Quick Edit Dialog */}
+            <TaskEditorDialog
+                isOpen={quickEditOpen}
+                onClose={() => setQuickEditOpen(false)}
+                task={task}
+                onSave={handleQuickEditSave}
+                accountId={task.telegram_account_id}
+                initialTab={quickEditTab}
+            />
         </div>
     );
 };

@@ -22,8 +22,10 @@ import {
     Video,
     FileText,
     Forward,
+    CalendarOff,
 } from 'lucide-react';
 import api from '../../services/api';
+import TargetSelectionList from '../common/TargetSelectionList';
 
 // --- Constants ---
 const ACTION_TYPES = [
@@ -45,13 +47,25 @@ const SCHEDULE_TYPES = [
 
 const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
+const TABS = [
+    { key: 'details', label: 'Details' },
+    { key: 'target', label: 'Target' },
+    { key: 'action', label: 'Action' },
+    { key: 'schedule', label: 'Schedule' },
+    { key: 'safety', label: 'Safety' },
+];
+
+const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId, initialTab }) => {
     const [form, setForm] = useState(null);
     const [stickerSets, setStickerSets] = useState([]);
     const [stickers, setStickers] = useState([]);
     const [selectedStickerSet, setSelectedStickerSet] = useState('');
     const [loadingStickers, setLoadingStickers] = useState(false);
-    const [activeTab, setActiveTab] = useState("general");
+    const [activeTab, setActiveTab] = useState('general');
+
+    // Target selection state
+    const [groups, setGroups] = useState([]);
+    const [loadingGroups, setLoadingGroups] = useState(false);
 
     // Initialize form
     useEffect(() => {
@@ -68,12 +82,20 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                     specific_dates: [],
                     random_delay_minutes: 0,
                 },
+                target: task.target || { type: 'group', chat_id: 0, chat_title: '' },
                 simulate_typing: task.simulate_typing || false,
-                skip_days: task.skip_days || { weekly_holidays: [], specific_dates: [] },
+                skip_days: {
+                    weekly_holidays: task.skip_days?.weekly_holidays || [],
+                    specific_dates: task.skip_days?.specific_dates || [],
+                    this_month_only: task.skip_days?.this_month_only || false,
+                    monthly_skip_days: task.skip_days?.monthly_skip_days || [],
+                },
             });
-            setActiveTab("general");
+            setActiveTab(initialTab || 'general');
+            setStickers([]);
+            setSelectedStickerSet('');
         }
-    }, [task, isOpen]);
+    }, [task, isOpen, initialTab]);
 
     // Load sticker sets
     useEffect(() => {
@@ -105,6 +127,26 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
             setLoadingStickers(false);
         }
     };
+
+    const loadGroups = async () => {
+        if (!accountId) return;
+        setLoadingGroups(true);
+        try {
+            const res = await api.get(`/telegram-accounts/${accountId}/groups?limit=100`);
+            setGroups(res.data?.groups || res.data || []);
+        } catch (e) {
+            console.error('Failed to load groups:', e);
+        } finally {
+            setLoadingGroups(false);
+        }
+    };
+
+    // Load groups when target tab is opened
+    useEffect(() => {
+        if (activeTab === 'target' && groups.length === 0 && accountId) {
+            loadGroups();
+        }
+    }, [activeTab, accountId]);
 
     const handleFileUpload = async (file) => {
         const formData = new FormData();
@@ -141,7 +183,54 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
     if (!form) return null;
 
     // --- Renderers ---
-    const renderContentTab = () => {
+
+    const renderDetailsTab = () => (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+            <div>
+                <Label className="text-sm font-medium mb-1 block">Task Name</Label>
+                <Input
+                    value={form.name}
+                    onChange={e => updateForm('name', e.target.value)}
+                    placeholder="e.g., Morning duty report"
+                />
+            </div>
+            <div>
+                <Label className="text-sm font-medium mb-1 block">Description</Label>
+                <Textarea
+                    value={form.description || ''}
+                    onChange={e => updateForm('description', e.target.value)}
+                    placeholder="Brief description of what this task does..."
+                    rows={3}
+                    className="resize-none"
+                />
+            </div>
+        </div>
+    );
+
+    const renderTargetTab = () => (
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
+            {form.target?.chat_title && (
+                <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 mb-2">
+                    <p className="text-xs text-muted-foreground">Current target:</p>
+                    <p className="text-sm font-medium">{form.target.chat_title}</p>
+                </div>
+            )}
+            <TargetSelectionList
+                groups={groups}
+                selectedTargetId={form.target?.chat_id}
+                onSelect={(group) => updateForm('target', {
+                    type: group.type || 'group',
+                    chat_id: group.id,
+                    chat_title: group.title,
+                    access_hash: group.access_hash,
+                })}
+                isLoading={loadingGroups}
+                onRetry={loadGroups}
+            />
+        </div>
+    );
+
+    const renderContentEditor = () => {
         switch (form.action_type) {
             case 'send_text':
                 return (
@@ -273,6 +362,42 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
         }
     };
 
+    const renderActionTab = () => (
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
+            {/* Action Type Picker */}
+            <div>
+                <Label className="text-sm font-medium mb-2 block">Action Type</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {ACTION_TYPES.map(type => (
+                        <button
+                            key={type.value}
+                            onClick={() => {
+                                updateForm('action_type', type.value);
+                                updateForm('action_content', {});
+                            }}
+                            className={`flex items-center gap-2 p-2.5 rounded-lg border text-left text-xs transition-all ${form.action_type === type.value
+                                ? 'border-primary bg-primary/10 ring-1 ring-primary/20'
+                                : 'hover:bg-muted/50'
+                                }`}
+                        >
+                            <type.icon className={`h-4 w-4 shrink-0 ${type.color}`} />
+                            <div className="min-w-0">
+                                <p className="font-medium">{type.label}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{type.desc}</p>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Content Editor — directly below action type */}
+            <div className="pt-2 border-t border-border">
+                <Label className="text-sm font-medium mb-3 block">Content</Label>
+                {renderContentEditor()}
+            </div>
+        </div>
+    );
+
     const renderScheduleTab = () => (
         <div className="space-y-5">
             <div className="space-y-2">
@@ -317,7 +442,12 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                             <SelectItem value="Asia/Dhaka">Asia/Dhaka (GMT+6)</SelectItem>
                             <SelectItem value="Asia/Kolkata">Asia/Kolkata (GMT+5:30)</SelectItem>
                             <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
+                            <SelectItem value="America/Los_Angeles">America/Los_Angeles (PST)</SelectItem>
                             <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
+                            <SelectItem value="Europe/Berlin">Europe/Berlin (CET)</SelectItem>
+                            <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
+                            <SelectItem value="Asia/Dubai">Asia/Dubai (GST)</SelectItem>
+                            <SelectItem value="Australia/Sydney">Australia/Sydney (AEDT)</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
@@ -413,7 +543,7 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
         </div>
     );
 
-    const renderOptionsTab = () => (
+    const renderSafetyTab = () => (
         <div className="space-y-6">
             <div className="flex items-center justify-between p-4 rounded-lg border">
                 <div>
@@ -472,6 +602,59 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                     </div>
                 )}
             </div>
+
+            {/* Only This Month */}
+            <div className="space-y-4 pt-2 border-t border-border">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-amber-500/20 bg-amber-500/5">
+                    <div className="flex items-start gap-3">
+                        <CalendarOff className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+                        <div>
+                            <p className="text-sm font-medium">Only This Month</p>
+                            <p className="text-xs text-muted-foreground">Task will auto-deactivate when the current month ends</p>
+                        </div>
+                    </div>
+                    <Switch
+                        checked={form.skip_days.this_month_only || false}
+                        onCheckedChange={(checked) => updateForm('skip_days', {
+                            ...form.skip_days,
+                            this_month_only: checked,
+                            monthly_skip_days: checked ? form.skip_days.monthly_skip_days || [] : [],
+                        })}
+                    />
+                </div>
+
+                {form.skip_days.this_month_only && (
+                    <div className="space-y-3">
+                        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                                📅 This task will only run during <strong>{new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}</strong>.
+                                When the month ends, it will be automatically deactivated.
+                            </p>
+                        </div>
+                        <div>
+                            <Label className="text-xs font-medium mb-2 block">Skip Days of Month</Label>
+                            <div className="flex gap-1.5 flex-wrap">
+                                {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                    <button
+                                        key={day}
+                                        onClick={() => {
+                                            const days = form.skip_days.monthly_skip_days || [];
+                                            const newDays = days.includes(day) ? days.filter(d => d !== day) : [...days, day];
+                                            updateForm('skip_days', { ...form.skip_days, monthly_skip_days: newDays });
+                                        }}
+                                        className={`w-8 h-8 rounded border text-xs font-medium transition-all ${(form.skip_days.monthly_skip_days || []).includes(day)
+                                            ? 'border-amber-500 bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                                            : 'border-border hover:bg-muted'
+                                            }`}
+                                    >
+                                        {day}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 
@@ -483,67 +666,31 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
             className="max-w-3xl"
         >
             <div className="flex flex-col h-[70vh]">
-                <div className="flex bg-muted p-1 rounded-lg mb-4 shrink-0">
-                    {['general', 'content', 'schedule', 'options'].map(tab => (
+                <div className="flex bg-muted p-1 rounded-lg mb-4 shrink-0 overflow-x-auto">
+                    {TABS.map(tab => (
                         <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === tab
+                            key={tab.key}
+                            onClick={() => setActiveTab(tab.key)}
+                            className={`flex-1 px-3 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap ${activeTab === tab.key
                                 ? 'bg-background shadow text-foreground'
                                 : 'text-muted-foreground hover:text-foreground'
                                 }`}
                         >
-                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                            {tab.label}
                         </button>
                     ))}
                 </div>
 
                 <div className="flex-1 overflow-y-auto pr-2 pb-4">
-                    {activeTab === 'general' && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-                            <div>
-                                <Label className="text-sm font-medium mb-1 block">Task Name</Label>
-                                <Input
-                                    value={form.name}
-                                    onChange={e => updateForm('name', e.target.value)}
-                                />
-                            </div>
-                            <div>
-                                <Label className="text-sm font-medium mb-1 block">Description</Label>
-                                <Input
-                                    value={form.description}
-                                    onChange={e => updateForm('description', e.target.value)}
-                                />
-                            </div>
-                            <div className="pt-4">
-                                <Label className="text-sm font-medium mb-2 block">Action Type</Label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {ACTION_TYPES.map(type => (
-                                        <button
-                                            key={type.value}
-                                            onClick={() => {
-                                                updateForm('action_type', type.value);
-                                                updateForm('action_content', {});
-                                            }}
-                                            className={`flex items-center gap-2 p-2 rounded border text-left text-xs transition-colors ${form.action_type === type.value
-                                                ? 'border-primary bg-primary/10 ring-1 ring-primary/20'
-                                                : 'hover:bg-muted'
-                                                }`}
-                                        >
-                                            <type.icon className={`h-4 w-4 ${type.color}`} />
-                                            <span>{type.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
+                    {activeTab === 'details' && renderDetailsTab()}
+
+                    {activeTab === 'target' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-2">
+                            {renderTargetTab()}
                         </div>
                     )}
 
-                    {activeTab === 'content' && (
-                        <div className="animate-in fade-in slide-in-from-bottom-2">
-                            {renderContentTab()}
-                        </div>
-                    )}
+                    {activeTab === 'action' && renderActionTab()}
 
                     {activeTab === 'schedule' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2">
@@ -551,9 +698,9 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId }) => {
                         </div>
                     )}
 
-                    {activeTab === 'options' && (
+                    {activeTab === 'safety' && (
                         <div className="animate-in fade-in slide-in-from-bottom-2">
-                            {renderOptionsTab()}
+                            {renderSafetyTab()}
                         </div>
                     )}
                 </div>
