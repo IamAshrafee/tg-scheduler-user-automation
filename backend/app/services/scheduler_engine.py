@@ -34,9 +34,19 @@ class SchedulerEngine:
         for task in tasks:
             await self.add_job(task)
 
+        # Register daily pre-scheduler job (12:01 AM) for native-schedule tasks
+        from app.services.pre_scheduler_service import pre_scheduler_service
+        self.scheduler.add_job(
+            pre_scheduler_service.run_daily_preschedule,
+            trigger=CronTrigger(hour=0, minute=1, timezone=pytz.timezone("Asia/Dhaka")),
+            id="daily_preschedule",
+            replace_existing=True,
+            misfire_grace_time=600,
+        )
+
         self.scheduler.start()
         self._started = True
-        print(f"Scheduler started with {len(tasks)} task(s).")
+        print(f"Scheduler started with {len(tasks)} task(s) + daily pre-scheduler.")
 
     def stop(self):
         """Shut down the scheduler."""
@@ -53,6 +63,10 @@ class SchedulerEngine:
         self.remove_job(str(task.id))
 
         if not task.is_enabled:
+            return
+
+        # Native-schedule tasks are handled by the daily pre-scheduler, not APScheduler
+        if task.use_native_schedule:
             return
 
         schedule = task.schedule

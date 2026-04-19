@@ -86,6 +86,7 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId, initialTab
                 },
                 target: task.target || { type: 'group', chat_id: 0, chat_title: '' },
                 simulate_typing: task.simulate_typing || false,
+                use_native_schedule: task.use_native_schedule || false,
                 skip_days: {
                     weekly_holidays: task.skip_days?.weekly_holidays || [],
                     specific_dates: task.skip_days?.specific_dates || [],
@@ -402,6 +403,22 @@ const TaskEditorDialog = ({ isOpen, onClose, task, onSave, accountId, initialTab
 
     const renderScheduleTab = () => (
         <div className="space-y-5">
+            {/* Native Scheduling Toggle */}
+            <div className="flex items-center justify-between p-4 rounded-lg border border-primary/20 bg-primary/5">
+                <div>
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                        Use Telegram Native Scheduling
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Pre-schedules messages at 12:01 AM daily. Zero chance of missing a send.
+                    </p>
+                </div>
+                <Switch
+                    checked={form.use_native_schedule}
+                    onCheckedChange={(checked) => updateForm('use_native_schedule', checked)}
+                />
+            </div>
+
             <div className="space-y-2">
                 <Label className="text-xs font-medium">Schedule Type</Label>
                 <div className="grid gap-2 sm:grid-cols-2">

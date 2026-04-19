@@ -7,13 +7,14 @@ from slowapi.errors import RateLimitExceeded
 
 from app.config import get_settings
 from app.middleware.rate_limiter import limiter
-from app.routes import auth, telegram_accounts, tasks, templates, off_days, activity_logs, admin
+from app.routes import auth, telegram_accounts, tasks, templates, off_days, activity_logs, admin, keep_online
 from app.services.user_service import user_service
 from app.services.telegram_account_service import telegram_account_service
 from app.services.telegram_client_manager import telegram_client_manager
 from app.services.task_service import task_service
 from app.services.activity_log_service import activity_log_service
 from app.services.scheduler_engine import scheduler_engine
+from app.services.keep_online_service import keep_online_service
 
 settings = get_settings()
 logger = logging.getLogger(__name__)
@@ -35,14 +36,16 @@ async def lifespan(app: FastAPI):
     from app.routes.templates import seed_templates
     await seed_templates()
 
-    # Start scheduler
+    # Start scheduler & keep-online loop
     await scheduler_engine.start()
+    await keep_online_service.start_background_loop()
 
     yield
 
     # Shutdown
     print("Shutting down...")
     scheduler_engine.stop()
+    await keep_online_service.stop_background_loop()
     await telegram_client_manager.disconnect_all()
     await close_database_client()
 
@@ -96,6 +99,7 @@ app.include_router(templates.router, prefix="/api/v1/templates", tags=["Template
 app.include_router(off_days.router, prefix="/api/v1/off-days", tags=["Off Days"])
 app.include_router(activity_logs.router, prefix="/api/v1/activity-logs", tags=["Activity Logs"])
 app.include_router(admin.router, prefix="/api/v1/admin", tags=["Admin"])
+app.include_router(keep_online.router, prefix="/api/v1/keep-online", tags=["Keep Online"])
 
 @app.get("/api/v1/health")
 async def health_check():

@@ -27,6 +27,7 @@ import {
     CalendarOff,
     Hash,
     Megaphone,
+    Zap,
 } from 'lucide-react';
 import { formatDateTime, formatTime, formatLogTime, getTaskTimezone, format24to12 } from '../lib/time';
 
@@ -379,6 +380,14 @@ const TaskDetailPage = () => {
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Typing Simulation</span>
                                 <span className="text-emerald-500 font-medium">Active</span>
+                            </div>
+                        )}
+                        {task.use_native_schedule && (
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">Native pre-scheduling</span>
+                                <span className="text-blue-500 font-medium flex items-center gap-1">
+                                    <Zap className="h-3.5 w-3.5" /> Active
+                                </span>
                             </div>
                         )}
                         {task.skip_days?.this_month_only && (

@@ -18,9 +18,9 @@ import {
     ToggleRight,
     Trash2,
     Eye,
-    Pencil,
     Filter,
     Search,
+    Zap,
 } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
 import { SkeletonCard } from '../components/ui/skeleton';
@@ -210,9 +210,14 @@ const TasksPage = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border shrink-0 ${STATUS_STYLES[task.status] || STATUS_STYLES.active}`}>
-                                            {task.status}
-                                        </span>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            {task.use_native_schedule && (
+                                                <Zap className="h-3.5 w-3.5 fill-blue-500 text-blue-500" title="Native Schedule" />
+                                            )}
+                                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${STATUS_STYLES[task.status] || STATUS_STYLES.active}`}>
+                                                {task.status}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {/* Details */}

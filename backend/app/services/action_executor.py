@@ -13,7 +13,7 @@ from app.services.task_service import task_service
 UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
 
 
-async def execute_task(task: Task, dry_run: bool = False) -> dict:
+async def execute_task(task: Task, dry_run: bool = False, schedule_time: Optional[datetime] = None) -> dict:
     """
     Execute a task action via Telegram.
     Handles anti-ban measures (typing simulation, random delay),
@@ -68,7 +68,7 @@ async def execute_task(task: Task, dry_run: bool = False) -> dict:
 
     for attempt in range(max_retries):
         try:
-            await _execute_action(client, entity, task)
+            await _execute_action(client, entity, task, schedule_time=schedule_time)
             result["status"] = "sent"
             result["reason"] = None
             break
@@ -86,20 +86,28 @@ async def execute_task(task: Task, dry_run: bool = False) -> dict:
     if not dry_run:
         await _log_execution(task, result, retry_count=max_retries - 1 if result["status"] == "failed" else 0)
 
-        # Update task metadata
-        await task_service.update_after_execution(
-            str(task.id),
-            success=(result["status"] == "sent"),
-            timezone=task.schedule.timezone or "Asia/Dhaka",
-        )
+        # Don't update task metadata when pre-scheduling — the pre-scheduler
+        # sends multiple time slots per day, and we don't want to increment
+        # execution_count for each slot or overwrite next_execution.
+        if not schedule_time:
+            await task_service.update_after_execution(
+                str(task.id),
+                success=(result["status"] == "sent"),
+                timezone=task.schedule.timezone or "Asia/Dhaka",
+            )
 
     return result
 
 
-async def _execute_action(client, entity, task: Task):
+async def _execute_action(client, entity, task: Task, schedule_time: Optional[datetime] = None):
     """Dispatch to the correct send method based on action_type."""
     action = task.action_type
     content = task.action_content
+
+    # Build common kwargs for scheduling
+    schedule_kwargs = {}
+    if schedule_time:
+        schedule_kwargs["schedule"] = schedule_time
 
     if action == "send_sticker":
         sticker_id_str = content.sticker_id  # stored as string
@@ -125,7 +133,7 @@ async def _execute_action(client, entity, task: Task):
                 pass
 
         if sticker_doc:
-            await client.send_file(entity, sticker_doc)
+            await client.send_file(entity, sticker_doc, **schedule_kwargs)
         else:
             # Fallback: try with InputDocument
             from telethon.tl.types import InputDocument
@@ -134,35 +142,36 @@ async def _execute_action(client, entity, task: Task):
                 access_hash=int(content.sticker_access_hash or 0),
                 file_reference=b"",
             )
-            await client.send_file(entity, sticker_doc)
+            await client.send_file(entity, sticker_doc, **schedule_kwargs)
 
     elif action == "send_text":
         parse_mode = content.parse_mode  # "markdown", "html", or None
-        await client.send_message(entity, content.text or "", parse_mode=parse_mode)
+        await client.send_message(entity, content.text or "", parse_mode=parse_mode, **schedule_kwargs)
 
     elif action == "send_photo":
         file_path = os.path.join(UPLOADS_DIR, os.path.basename(content.file_path or ""))
         if not os.path.exists(file_path):
             raise Exception(f"File not found: {content.file_path}")
-        await client.send_file(entity, file_path, caption=content.caption or "")
+        await client.send_file(entity, file_path, caption=content.caption or "", **schedule_kwargs)
 
     elif action == "send_video":
         file_path = os.path.join(UPLOADS_DIR, os.path.basename(content.file_path or ""))
         if not os.path.exists(file_path):
             raise Exception(f"File not found: {content.file_path}")
-        await client.send_file(entity, file_path, caption=content.caption or "", video_note=False)
+        await client.send_file(entity, file_path, caption=content.caption or "", video_note=False, **schedule_kwargs)
 
     elif action == "send_document":
         file_path = os.path.join(UPLOADS_DIR, os.path.basename(content.file_path or ""))
         if not os.path.exists(file_path):
             raise Exception(f"File not found: {content.file_path}")
-        await client.send_file(entity, file_path, caption=content.caption or "", force_document=True)
+        await client.send_file(entity, file_path, caption=content.caption or "", force_document=True, **schedule_kwargs)
 
     elif action == "forward_message":
         await client.forward_messages(
             entity,
             messages=content.source_message_id,
             from_peer=content.source_chat_id,
+            **schedule_kwargs,
         )
 
     else:

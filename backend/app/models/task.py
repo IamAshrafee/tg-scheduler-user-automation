@@ -88,6 +88,7 @@ class TaskCreate(BaseModel):
     schedule: TaskSchedule
 
     simulate_typing: bool = False
+    use_native_schedule: bool = False  # Pre-schedule via Telegram's built-in scheduler at 12:01 AM
     max_executions: Optional[int] = None
     skip_days: SkipDays = SkipDays()
     template_id: Optional[str] = None
@@ -102,6 +103,7 @@ class TaskUpdate(BaseModel):
     action_content: Optional[ActionContent] = None
     schedule: Optional[TaskSchedule] = None
     simulate_typing: Optional[bool] = None
+    use_native_schedule: Optional[bool] = None
     max_executions: Optional[int] = None
     skip_days: Optional[SkipDays] = None
     batch_id: Optional[str] = None
@@ -122,6 +124,7 @@ class TaskInDB(BaseModel):
     schedule: TaskSchedule
 
     simulate_typing: bool = False
+    use_native_schedule: bool = False
     skip_days: SkipDays = SkipDays()
 
     is_enabled: bool = True

@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { Button } from '../components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '../components/ui/card';
-import { Loader2, Plus, LogOut, RefreshCw, Smartphone, Shield, Activity, Calendar } from 'lucide-react';
 import AddAccountDialog from '../components/AddAccountDialog';
+import KeepOnlineDialog from '../components/KeepOnlineDialog';
 import PageTransition from '../components/common/PageTransition';
 import { SkeletonCard } from '../components/ui/skeleton';
 import { toast } from 'react-hot-toast';
@@ -13,6 +13,10 @@ const TelegramAccountsPage = () => {
     const [accounts, setAccounts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+    
+    // Keep Online Dialog State
+    const [keepOnlineOpen, setKeepOnlineOpen] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState(null);
 
     const fetchAccounts = useCallback(async () => {
         try {
@@ -119,19 +123,32 @@ const TelegramAccountsPage = () => {
                                 </span>
                             </div>
                         </CardContent>
-                        <CardFooter className="flex items-center justify-end gap-2 bg-muted/40 p-4">
+                        <CardFooter className="flex items-center justify-between gap-2 bg-muted/40 p-4">
                             <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="sm"
-                                className="h-8 text-xs"
-                                onClick={() => handleReconnect(account._id)}
+                                className="h-8 text-xs text-blue-500 hover:text-blue-400 hover:bg-blue-500/10"
+                                onClick={() => {
+                                    setSelectedAccount(account);
+                                    setKeepOnlineOpen(true);
+                                }}
                             >
-                                <RefreshCw className="mr-2 h-3 w-3" />
-                                {account.status === 'active' ? 'Verify' : 'Reconnect'}
+                                <Activity className="mr-2 h-3 w-3" /> Status Rules
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleDisconnect(account._id)}>
-                                <LogOut className="mr-2 h-3 w-3" /> Disconnect
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 text-xs"
+                                    onClick={() => handleReconnect(account._id)}
+                                >
+                                    <RefreshCw className="mr-2 h-3 w-3" />
+                                    {account.status === 'active' ? 'Verify' : 'Reconnect'}
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-8 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => handleDisconnect(account._id)}>
+                                    <LogOut className="mr-2 h-3 w-3" />
+                                </Button>
+                            </div>
                         </CardFooter>
                     </Card>
                 ))}
@@ -156,6 +173,13 @@ const TelegramAccountsPage = () => {
                 isOpen={isAddDialogOpen}
                 onClose={() => setIsAddDialogOpen(false)}
                 onSuccess={fetchAccounts}
+            />
+
+            <KeepOnlineDialog
+                isOpen={keepOnlineOpen}
+                onClose={() => setKeepOnlineOpen(false)}
+                accountId={selectedAccount?._id}
+                accountName={selectedAccount?.first_name || 'Account'}
             />
         </PageTransition>
     );

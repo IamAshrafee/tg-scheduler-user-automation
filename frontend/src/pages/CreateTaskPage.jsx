@@ -111,6 +111,7 @@ const CreateTaskPage = () => {
             random_delay_minutes: 0,
         },
         simulate_typing: false,
+        use_native_schedule: false,
         max_executions: null,
         skip_days: { weekly_holidays: [], specific_dates: [], this_month_only: false, monthly_skip_days: [] },
     });
@@ -145,6 +146,7 @@ const CreateTaskPage = () => {
                     action_content: task.action_content || {},
                     schedule: { ...task.schedule, random_delay_minutes: task.schedule?.random_delay_minutes || 0 },
                     simulate_typing: task.simulate_typing || false,
+                    use_native_schedule: task.use_native_schedule || false,
                     skip_days: {
                         weekly_holidays: task.skip_days?.weekly_holidays || [],
                         specific_dates: task.skip_days?.specific_dates || [],
@@ -254,6 +256,7 @@ const CreateTaskPage = () => {
                 action_content: form.action_content,
                 schedule: form.schedule,
                 simulate_typing: form.simulate_typing,
+                use_native_schedule: form.use_native_schedule,
                 skip_days: form.skip_days,
             };
 
@@ -581,6 +584,24 @@ const CreateTaskPage = () => {
     const renderScheduleStep = () => (
         <div className="space-y-5">
             <p className="text-sm text-muted-foreground">Configure when this task should execute.</p>
+            
+            {/* Native Scheduling Toggle */}
+            <div className="flex items-center justify-between p-4 rounded-lg border border-primary/20 bg-primary/5">
+                <div>
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        Use Telegram Native Scheduling
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Pre-schedules messages at 12:01 AM daily via Telegram's built-in scheduler. 
+                        Zero chance of missing a send due to server or network issues.
+                    </p>
+                </div>
+                <Switch
+                    checked={form.use_native_schedule}
+                    onCheckedChange={(checked) => updateForm('use_native_schedule', checked)}
+                />
+            </div>
 
             {/* Schedule Type */}
             <div className="space-y-2">

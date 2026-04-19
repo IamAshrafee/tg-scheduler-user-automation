@@ -330,8 +330,25 @@ class TaskService:
         await self.collection.update_one({"_id": oid}, {"$set": update})
 
     async def get_enabled_tasks(self) -> List[Task]:
-        """Get all enabled tasks for scheduler loading."""
-        cursor = self.collection.find({"is_enabled": True})
+        """Get all enabled tasks for scheduler loading (excludes native-schedule tasks)."""
+        cursor = self.collection.find({
+            "is_enabled": True,
+            "$or": [
+                {"use_native_schedule": {"$ne": True}},
+                {"use_native_schedule": {"$exists": False}},
+            ]
+        })
+        tasks = []
+        async for doc in cursor:
+            tasks.append(Task(**doc))
+        return tasks
+
+    async def get_native_schedule_tasks(self) -> List[Task]:
+        """Get all enabled tasks that use Telegram's native scheduling."""
+        cursor = self.collection.find({
+            "is_enabled": True,
+            "use_native_schedule": True,
+        })
         tasks = []
         async for doc in cursor:
             tasks.append(Task(**doc))
