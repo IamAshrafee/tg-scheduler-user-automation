@@ -76,7 +76,7 @@ class KeepOnlineService:
             return
         self._running = True
         self._task = asyncio.create_task(self._loop())
-        print("[KeepOnline] Background loop started.")
+        print("[KeepOnline] Background loop started.", flush=True)
 
     async def stop_background_loop(self):
         """Stop the background loop."""
@@ -87,7 +87,7 @@ class KeepOnlineService:
                 await self._task
             except asyncio.CancelledError:
                 pass
-        print("[KeepOnline] Background loop stopped.")
+        print("[KeepOnline] Background loop stopped.", flush=True)
 
     async def _loop(self):
         """Main loop: ping online status every 4 minutes."""
@@ -95,7 +95,7 @@ class KeepOnlineService:
             try:
                 await self._ping_all()
             except Exception as e:
-                print(f"[KeepOnline] Error in ping loop: {e}")
+                print(f"[KeepOnline] Error in ping loop: {e}", flush=True)
             await asyncio.sleep(240)  # 4 minutes
 
     async def _ping_all(self):
@@ -126,7 +126,7 @@ class KeepOnlineService:
 
                 client = await telegram_client_manager.get_client(entry.telegram_account_id)
                 if not client:
-                    print(f"[KeepOnline] Client unavailable for account {entry.telegram_account_id} — session may be expired.")
+                    print(f"[KeepOnline] Client unavailable for account {entry.telegram_account_id} — session may be expired.", flush=True)
                     failed += 1
                     continue
 
@@ -136,10 +136,9 @@ class KeepOnlineService:
 
             except Exception as e:
                 failed += 1
-                print(f"[KeepOnline] Failed for account {entry.telegram_account_id}: {e}")
+                print(f"[KeepOnline] Failed for account {entry.telegram_account_id}: {e}", flush=True)
 
-        if pinged or failed:
-            print(f"[KeepOnline] ✓ Pinged {pinged}, skipped {skipped}, failed {failed}")
+        print(f"[KeepOnline] ✓ Pinged {pinged}, skipped {skipped}, failed {failed}", flush=True)
 
     def _is_within_time_range(self, entry: KeepOnline) -> bool:
         """Check if current time is within the configured time range."""
