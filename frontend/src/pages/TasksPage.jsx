@@ -21,6 +21,7 @@ import {
     Filter,
     Search,
     Zap,
+    Pencil,
 } from 'lucide-react';
 import PageTransition from '../components/common/PageTransition';
 import { SkeletonCard } from '../components/ui/skeleton';

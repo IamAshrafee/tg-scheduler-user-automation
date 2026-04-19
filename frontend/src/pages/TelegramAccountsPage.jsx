@@ -8,6 +8,7 @@ import PageTransition from '../components/common/PageTransition';
 import { SkeletonCard } from '../components/ui/skeleton';
 import { toast } from 'react-hot-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { Plus, Shield, Smartphone, Activity, Calendar, RefreshCw, LogOut } from 'lucide-react';
 
 const TelegramAccountsPage = () => {
     const [accounts, setAccounts] = useState([]);
