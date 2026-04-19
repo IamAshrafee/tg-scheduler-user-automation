@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.routes.auth import get_current_user
+from app.middleware.deps import get_current_active_user
 from app.models.user import User
 from app.models.keep_online import KeepOnline, KeepOnlineUpdate
 from app.services.keep_online_service import keep_online_service
@@ -11,7 +11,7 @@ router = APIRouter()
 @router.get("/{account_id}", response_model=KeepOnline)
 async def get_keep_online_settings(
     account_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """Get Keep Online settings for a specific Telegram account."""
     # Verify account belongs to user
@@ -36,7 +36,7 @@ async def get_keep_online_settings(
 async def update_keep_online_settings(
     account_id: str,
     update_data: KeepOnlineUpdate,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_active_user)
 ):
     """Update or create Keep Online settings for a specific Telegram account."""
     # Verify account belongs to user
