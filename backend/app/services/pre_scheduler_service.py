@@ -45,6 +45,15 @@ class PreSchedulerService:
             except Exception as e:
                 print(f"[PreScheduler] Error processing task {task.id} ({task.name}): {e}")
 
+    async def preschedule_single_task(self, task: Task):
+        """Pre-schedule a single task immediately for today if it qualifies."""
+        if getattr(task, 'use_native_schedule', False):
+            from app.services.task_service import task_service
+            from app.services.action_executor import execute_task
+            try:
+                await self._preschedule_task(task, task_service, execute_task)
+            except Exception as e:
+                print(f"[PreScheduler] Error in immediate pre-scheduling for task {task.id}: {e}")
     async def _preschedule_task(self, task: Task, task_service, execute_task_fn):
         """Pre-schedule a single task for today."""
         schedule = task.schedule

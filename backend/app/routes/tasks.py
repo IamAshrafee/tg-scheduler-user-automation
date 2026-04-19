@@ -1,7 +1,7 @@
 import os
 import logging
 from typing import Annotated, Optional, List
-from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Query
+from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Query, BackgroundTasks
 from bson import ObjectId
 
 from app.models.user import User
@@ -57,6 +57,7 @@ async def list_tasks(
 async def create_task(
     task_in: TaskCreate,
     current_user: Annotated[User, Depends(get_current_active_user)],
+    background_tasks: BackgroundTasks,
 ):
     """Create a new automated task."""
     # Enforce task limit
@@ -91,6 +92,11 @@ async def create_task(
         await scheduler_engine.add_job(task)
     except Exception:
         pass  # Scheduler may not be fully initialized
+
+    # Immediately check for native scheduling for today
+    if getattr(task, "use_native_schedule", False):
+        from app.services.pre_scheduler_service import pre_scheduler_service
+        background_tasks.add_task(pre_scheduler_service.preschedule_single_task, task)
 
     return task
 
@@ -166,6 +172,7 @@ async def update_task(
     task_id: str,
     task_update: TaskUpdate,
     current_user: Annotated[User, Depends(get_current_active_user)],
+    background_tasks: BackgroundTasks,
 ):
     """Update an existing task."""
     existing = await task_service.get_by_id(task_id)
@@ -180,6 +187,10 @@ async def update_task(
         await scheduler_engine.update_job(task)
     except Exception:
         pass
+
+    if getattr(task, "use_native_schedule", False) and task.is_enabled:
+        from app.services.pre_scheduler_service import pre_scheduler_service
+        background_tasks.add_task(pre_scheduler_service.preschedule_single_task, task)
 
     return task
 
@@ -209,6 +220,7 @@ async def delete_task(
 async def toggle_task(
     task_id: str,
     current_user: Annotated[User, Depends(get_current_active_user)],
+    background_tasks: BackgroundTasks,
 ):
     """Enable or disable a task."""
     existing = await task_service.get_by_id(task_id)
@@ -226,6 +238,10 @@ async def toggle_task(
             scheduler_engine.remove_job(task_id)
     except Exception:
         pass
+
+    if task.is_enabled and getattr(task, "use_native_schedule", False):
+        from app.services.pre_scheduler_service import pre_scheduler_service
+        background_tasks.add_task(pre_scheduler_service.preschedule_single_task, task)
 
     return task
 
