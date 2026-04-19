@@ -101,26 +101,45 @@ class KeepOnlineService:
     async def _ping_all(self):
         """Send UpdateStatusRequest for all enabled accounts."""
         from app.services.telegram_client_manager import telegram_client_manager
+        from app.services.telegram_account_service import telegram_account_service
 
         enabled = await self.get_all_enabled()
         if not enabled:
             return
 
+        pinged = 0
+        skipped = 0
+        failed = 0
+
         for entry in enabled:
             try:
                 # Check time range if applicable
                 if entry.mode == "time_range" and not self._is_within_time_range(entry):
+                    skipped += 1
+                    continue
+
+                # Check if account is still active before wasting a client call
+                account = await telegram_account_service.get_by_id(entry.telegram_account_id)
+                if not account or account.status != "active":
+                    skipped += 1
                     continue
 
                 client = await telegram_client_manager.get_client(entry.telegram_account_id)
                 if not client:
+                    print(f"[KeepOnline] Client unavailable for account {entry.telegram_account_id} — session may be expired.")
+                    failed += 1
                     continue
 
                 from telethon.tl import functions
                 await client(functions.account.UpdateStatusRequest(offline=False))
+                pinged += 1
 
             except Exception as e:
+                failed += 1
                 print(f"[KeepOnline] Failed for account {entry.telegram_account_id}: {e}")
+
+        if pinged or failed:
+            print(f"[KeepOnline] ✓ Pinged {pinged}, skipped {skipped}, failed {failed}")
 
     def _is_within_time_range(self, entry: KeepOnline) -> bool:
         """Check if current time is within the configured time range."""
