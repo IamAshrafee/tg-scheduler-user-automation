@@ -104,6 +104,8 @@ class PreSchedulerService:
                         scheduled_time=schedule_dt,
                     )
                 else:
+                    fail_reason = result.get('reason', 'Unknown')
+                    print(f"[PreScheduler] FAILED slot {schedule_dt.strftime('%I:%M %p')} for '{task.name}': {fail_reason}")
                     await activity_log_service.log(
                         task_id=str(task.id),
                         telegram_account_id=str(task.telegram_account_id),

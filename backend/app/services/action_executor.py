@@ -13,6 +13,66 @@ from app.services.task_service import task_service
 UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
 
 
+async def _resolve_entity(client, target):
+    """
+    Resolve a Telegram entity with multiple fallback strategies.
+    Telethon's get_entity(int) fails when the entity isn't in the session cache
+    (e.g., after a server restart). We use the stored access_hash and target type
+    to construct the proper InputPeer as a fallback.
+    """
+    from telethon.tl.types import (
+        InputPeerChannel,
+        InputPeerChat,
+        InputPeerUser,
+    )
+
+    chat_id = target.chat_id
+    access_hash = target.access_hash or 0
+    target_type = getattr(target, 'type', None)  # "group" | "channel"
+
+    # Strategy 1: Direct get_entity (works if entity is in Telethon's cache)
+    try:
+        return await client.get_entity(chat_id)
+    except (ValueError, TypeError):
+        pass  # Entity not in cache, try fallback
+
+    # Strategy 2: Construct InputPeer using stored access_hash and type
+    if access_hash:
+        try:
+            if target_type in ("group", "channel"):
+                # Groups and supergroups/channels are both InputPeerChannel in Telethon
+                peer = InputPeerChannel(channel_id=chat_id, access_hash=access_hash)
+                return await client.get_entity(peer)
+            else:
+                # Regular user
+                peer = InputPeerUser(user_id=chat_id, access_hash=access_hash)
+                return await client.get_entity(peer)
+        except Exception:
+            pass
+
+    # Strategy 3: Refresh entity cache by fetching dialogs, then retry
+    try:
+        await client.get_dialogs()
+        return await client.get_entity(chat_id)
+    except Exception:
+        pass
+
+    # Final attempt: if it's a basic/legacy group (small negative ID), try InputPeerChat
+    if chat_id < 0:
+        try:
+            peer = InputPeerChat(chat_id=abs(chat_id))
+            return await client.get_entity(peer)
+        except Exception:
+            pass
+
+    raise ValueError(
+        f"Could not resolve entity chat_id={chat_id} (type={target_type}). "
+        f"The entity is not in the session cache and the stored access_hash "
+        f"({'present' if access_hash else 'missing'}) did not help. "
+        f"Try re-selecting the target group in the task editor."
+    )
+
+
 async def execute_task(task: Task, dry_run: bool = False, schedule_time: Optional[datetime] = None) -> dict:
     """
     Execute a task action via Telegram.
@@ -43,7 +103,7 @@ async def execute_task(task: Task, dry_run: bool = False, schedule_time: Optiona
     # --- Resolve target entity ---
     try:
         target = task.target
-        entity = await client.get_entity(target.chat_id)
+        entity = await _resolve_entity(client, target)
     except Exception as e:
         result["status"] = "failed"
         result["reason"] = f"Could not resolve target: {str(e)}"
